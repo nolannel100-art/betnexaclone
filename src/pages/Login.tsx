@@ -215,7 +215,7 @@ export default function Login() {
                 Your account has been banned. Please contact support for assistance.
               </p>
               <a
-                href={`https://wa.me/19342553936?text=${encodeURIComponent(
+                href={`https://wa.me/14133986690?text=${encodeURIComponent(
                   `Dear BetNexa Support,\n\nI am writing to request assistance regarding my banned account.\n\n` +
                   `Account Details:\n` +
                   `• Username: ${bannedUserInfo?.username || 'N/A'}\n` +
