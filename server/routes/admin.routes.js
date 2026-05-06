@@ -21,7 +21,7 @@ const {
   registerAdminDarajaTestAttempt,
   ensureAdminDarajaTestFunding,
 } = require('../services/adminDarajaTestFundingService');
-const { sendSms, sendActivationSms, sendWithdrawalSms, sendBetWonSms, sendAdminDepositNotification } = require('../services/smsService.js');
+const { sendSms, sendActivationSms, sendWithdrawalSms, sendBetWonSms, sendBanSms, sendAdminDepositNotification } = require('../services/smsService.js');
 
 const router = express.Router();
 
@@ -2576,6 +2576,18 @@ router.put('/users/:userId/ban', checkAdmin, async (req, res) => {
 
     console.log(`\n🚫 [PUT /api/admin/users/${userId}/ban] Setting banned=${banned}`);
 
+    // First, fetch user details to get phone number for SMS
+    const { data: userData, error: userFetchError } = await supabase
+      .from('users')
+      .select('id, username, phone_number, email')
+      .eq('id', userId)
+      .single();
+
+    if (userFetchError || !userData) {
+      console.error('❌ Error fetching user details:', userFetchError?.message);
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
     const { data, error } = await supabase
       .from('users')
       .update({ is_banned: !!banned })
@@ -2596,6 +2608,19 @@ router.put('/users/:userId/ban', checkAdmin, async (req, res) => {
         .eq('user_id', userId);
       if (sessionError) console.error('⚠️ Failed to clear sessions:', sessionError.message);
       else console.log(`✅ Cleared all sessions for banned user ${userId}`);
+
+      // Send SMS notification to banned user
+      if (userData.phone_number) {
+        console.log(`📱 Sending ban SMS to ${userData.username} (${userData.phone_number})`);
+        const smsSent = await sendBanSms(userData.phone_number, userData.username);
+        if (smsSent) {
+          console.log(`✅ Ban SMS sent successfully to ${userData.username}`);
+        } else {
+          console.warn(`⚠️ Failed to send ban SMS to ${userData.username}`);
+        }
+      } else {
+        console.warn(`⚠️ No phone number found for user ${userData.username}, SMS not sent`);
+      }
     }
 
     console.log(`✅ User ${data.username} ${banned ? 'banned' : 'unbanned'}`);

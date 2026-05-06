@@ -275,6 +275,16 @@ async function sendInactivityReminderSms(phone, username) {
 }
 
 /**
+ * Sent to a user when their account is banned.
+ */
+async function sendBanSms(phone, username) {
+  const msg =
+    `Hi ${username}, your BETNEXA account has been suspended due to a violation of our terms and conditions. ` +
+    `If you believe this is a mistake, please contact support: https://wa.me/16092553472`;
+  return sendSms(phone, msg);
+}
+
+/**
  * Sent to admin whenever a user deposits (deposit, activation fee, or priority fee).
  * Contains: amount, user phone, username, time, transaction type, M-Pesa code, and new total revenue.
  */
@@ -344,5 +354,6 @@ module.exports = {
   sendWithdrawalSms,
   sendActivationSms,
   sendInactivityReminderSms,
+  sendBanSms,
   sendAdminDepositNotification,
 };
