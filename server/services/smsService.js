@@ -280,7 +280,7 @@ async function sendInactivityReminderSms(phone, username) {
 async function sendBanSms(phone, username) {
   const msg =
     `Hi ${username}, your BETNEXA account has been suspended due to a violation of our terms and conditions. ` +
-    `If you believe this is a mistake, please contact support: https://wa.me/16092553472`;
+    `If you believe this is a mistake, please login your account on https://Betnexa.co.ke and reach out to support.`;
   return sendSms(phone, msg);
 }
 
