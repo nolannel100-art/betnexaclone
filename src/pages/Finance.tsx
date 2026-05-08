@@ -91,7 +91,7 @@ export default function Finance() {
   const { deposit, withdraw, balance, stakeableBalance, withdrawableBalance, setBalance, setStakeableBalance, setWithdrawableBalance } = useBets();
   const { user, updateUser, refreshUserData } = useUser();
   const { getUserTransactions, addTransaction, fetchTransactions } = useTransactions();
-  const actualUserId = user?.id || "user1";
+  const actualUserId = user?.id || "";
   const userTransactions = getUserTransactions(actualUserId);
   
   // Calculate available and locked balances
@@ -144,8 +144,10 @@ export default function Finance() {
   useEffect(() => {
     if (!user?.id) return;
 
+    const userId = user.id;
+
     // Subscribe to balance changes
-    const unsubscribe = balanceSyncService.subscribe(user?.id || 'user1', (newBalance) => {
+    const unsubscribe = balanceSyncService.subscribe(userId, (newBalance) => {
       console.log('📊 Balance synced:', newBalance);
       setBalance(newBalance);
       updateUser({ accountBalance: newBalance });
@@ -154,7 +156,7 @@ export default function Finance() {
     // Subscribe to split balance updates from sync service
     const handleSplitBalance = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail.userId === user?.id) {
+      if (detail.userId === userId) {
         console.log('📊 Split balance synced:', detail);
         setStakeableBalance(detail.stakeableBalance);
         setWithdrawableBalance(detail.withdrawableBalance);
@@ -164,13 +166,13 @@ export default function Finance() {
     window.addEventListener('split_balance_updated', handleSplitBalance);
 
     // Subscribe to activation status changes
-    const unsubActivation = balanceSyncService.subscribeActivation(user?.id || 'user1', (activated, activationDate) => {
+    const unsubActivation = balanceSyncService.subscribeActivation(userId, (activated, activationDate) => {
       console.log('🔐 Activation synced:', activated);
       updateUser({ withdrawalActivated: activated, withdrawalActivationDate: activationDate });
     });
 
     // Start auto-sync every 3 seconds
-    balanceSyncService.startAutoSync(user?.id || 'user1', 3000);
+    balanceSyncService.startAutoSync(userId, 3000);
 
     return () => {
       unsubscribe();
@@ -242,13 +244,17 @@ export default function Finance() {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      if (!user?.id) {
+        throw new Error("Unable to identify the current user. Please refresh and try again.");
+      }
+
       const response = await fetch(`${apiUrl}/api/payments/daraja/initiate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: TEST_ACTIVATION_FEE,
           phoneNumber: activationPhoneNumber,
-          userId: user?.id || "user1",
+          userId: user.id,
           paymentType: 'activation'
         })
       });
@@ -364,7 +370,9 @@ export default function Finance() {
               accountBalance: newBalance,
             });
             setBalance(newBalance);
+            if (actualUserId) {
             await fetchTransactions(actualUserId);
+          }
 
             setPaymentStatus("success");
             setStatusMessage(`✅ Account activated! KSH ${TEST_ACTIVATION_FEE} added to your balance. New balance: KSH ${newBalance.toLocaleString()}`);
@@ -422,15 +430,21 @@ export default function Finance() {
 
   const processPendingWithdrawal = async (withdrawalAmount: number) => {
     if (withdrawalInProgress.current) return;
+    if (!user?.id) {
+      setStatusMessage("❌ Unable to identify the current user. Please refresh and try again.");
+      setPaymentStatus("failed");
+      withdrawalInProgress.current = false;
+      return;
+    }
     withdrawalInProgress.current = true;
-    const withdrawalKey = `WTH-${Date.now()}-${user?.id || 'user1'}`;
+    const withdrawalKey = `WTH-${Date.now()}-${user.id}`;
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/transactions/withdrawal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user?.id || "user1",
+          userId: user.id,
           amount: withdrawalAmount,
           phoneNumber: user?.phone || "",
           reason: "User initiated withdrawal",
@@ -443,7 +457,9 @@ export default function Finance() {
       }
 
       // Refresh transactions and balance from DB
-      await fetchTransactions(user?.id || "user1");
+      if (user?.id) {
+        await fetchTransactions(user.id);
+      }
       setBalance((prev) => prev - withdrawalAmount);
       updateUser({ accountBalance: balance - withdrawalAmount });
 
@@ -504,6 +520,10 @@ export default function Finance() {
 
     if (activeTab === "deposit") {
       try {
+        if (!user?.id) {
+          throw new Error("Unable to identify the current user. Please refresh and try again.");
+        }
+
         setStatusMessage("🔄 Sending STK push via M-Pesa...");
         const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
         const response = await fetch(`${apiUrl}/api/payments/daraja/initiate`, {
@@ -512,7 +532,7 @@ export default function Finance() {
           body: JSON.stringify({
             amount: transactionAmount,
             phoneNumber: mpesaNumber,
-            userId: user?.id || "user1",
+            userId: user.id,
             paymentType: 'deposit'
           })
         });
@@ -532,7 +552,9 @@ export default function Finance() {
         setPaymentStatus("sent");
         setStatusMessage("📱 STK push sent to your phone. Waiting for completion...");
 
-        await fetchTransactions(actualUserId);
+        if (actualUserId) {
+          await fetchTransactions(actualUserId);
+        }
 
         // Poll for payment status quickly for near-instant confirmation.
         let pollCount = 0;
@@ -558,7 +580,9 @@ export default function Finance() {
                 updateUser({ accountBalance: syncedBalance });
               }
 
-              await fetchTransactions(actualUserId);
+              if (actualUserId) {
+                await fetchTransactions(actualUserId);
+              }
               await refreshUserData();
 
               setStatusMessage("✅ Payment successful! Your account balance has been updated.");
@@ -570,7 +594,9 @@ export default function Finance() {
               setStatusCheckInterval(null);
               setPaymentStatus("failed");
               setStatusMessage("❌ Transaction cancelled on phone.");
-              await fetchTransactions(actualUserId);
+              if (actualUserId) {
+                await fetchTransactions(actualUserId);
+              }
               await refreshUserData();
               setIsProcessing(false);
             } else if (st === 'failed') {
@@ -578,7 +604,9 @@ export default function Finance() {
               setStatusCheckInterval(null);
               setPaymentStatus("failed");
               setStatusMessage("❌ Transaction failed. Please try again.");
-              await fetchTransactions(actualUserId);
+              if (actualUserId) {
+                await fetchTransactions(actualUserId);
+              }
               await refreshUserData();
               setIsProcessing(false);
             }
@@ -591,7 +619,9 @@ export default function Finance() {
             setStatusCheckInterval(null);
             setPaymentStatus("timeout");
             setStatusMessage("⏱️ Payment check timeout. Please verify your balance.");
-            await fetchTransactions(actualUserId);
+            if (actualUserId) {
+              await fetchTransactions(actualUserId);
+            }
             await refreshUserData();
             setIsProcessing(false);
           }
@@ -618,19 +648,25 @@ export default function Finance() {
 
       // Prevent double withdrawal submission (ref guard is synchronous)
       if (withdrawalInProgress.current) return;
+      if (!user?.id) {
+        alert("Unable to identify the current user. Please refresh and try again.");
+        setIsProcessing(false);
+        setPaymentStatus("failed");
+        return;
+      }
       withdrawalInProgress.current = true;
 
       setIsProcessing(true);
       setStatusMessage("Processing withdrawal...");
 
-      const withdrawalKey = `WTH-${Date.now()}-${user?.id || 'user1'}`;
+      const withdrawalKey = `WTH-${Date.now()}-${user.id}`;
       try {
         const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
         const response = await fetch(`${apiUrl}/api/admin/transactions/withdrawal`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: user?.id || "user1",
+            userId: user.id,
             amount: transactionAmount,
             phoneNumber: user?.phone || "",
             reason: "User initiated withdrawal",
@@ -643,7 +679,9 @@ export default function Finance() {
         }
 
         // Refresh transactions and balance
-        await fetchTransactions(user?.id || "user1");
+        if (user.id) {
+          await fetchTransactions(user.id);
+        }
         if (data.transaction && data.transaction.user_id && data.transaction.amount) {
           setBalance((prev) => prev - transactionAmount);
           updateUser({ accountBalance: balance - transactionAmount });
