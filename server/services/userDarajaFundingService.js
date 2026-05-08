@@ -89,6 +89,7 @@ async function registerUserDarajaAttempt({
     phone_number: phoneNumber,
     external_reference: externalReference,
     checkout_request_id: checkoutRequestId,
+    payment_type: paymentType,
     description,
     balance_before: currentBalance,
     balance_after: currentBalance + depositAmount,
@@ -114,6 +115,7 @@ async function registerUserDarajaAttempt({
       phone_number: phoneNumber,
       external_reference: externalReference,
       checkout_request_id: checkoutRequestId,
+      payment_type: paymentType,
       description,
       created_at: timestamp,
       updated_at: timestamp,
@@ -121,7 +123,7 @@ async function registerUserDarajaAttempt({
     const retry = await supabase
       .from('transactions')
       .insert(minimal)
-      .select('id, user_id, amount, status, external_reference, checkout_request_id')
+      .select('id, user_id, amount, status, external_reference, checkout_request_id, payment_type')
       .single();
     if (retry.error) {
       return { success: false, error: retry.error.message || 'Failed to create transaction record' };
@@ -184,7 +186,7 @@ async function ensureUserDarajaFunding({
 
   const { data: existing } = await supabase
     .from('transactions')
-    .select('id, user_id, amount, status, external_reference, checkout_request_id, phone_number')
+    .select('id, user_id, amount, status, external_reference, checkout_request_id, phone_number, payment_type')
     .eq('checkout_request_id', checkoutRequestId)
     .maybeSingle();
 
@@ -282,9 +284,10 @@ async function ensureUserDarajaFunding({
   const newStakeable = prevStakeable + creditedAmount;
   const newBalance = newStakeable + (parseFloat(user.withdrawable_balance) || 0);
 
-  // Read payment type from cache to decide activation
+  // Read payment type from database first, then fall back to cache, then default to 'deposit'
   const cached = paymentCache.getPayment(checkoutRequestId);
-  const paymentType = cached?.payment_type || 'deposit';
+  let paymentType = completedTx.payment_type || cached?.payment_type || 'deposit';
+  console.log(`[ensureUserDarajaFunding] paymentType determination: db=${completedTx.payment_type}, cache=${cached?.payment_type}, final=${paymentType}`);
 
   const userUpdate = { account_balance: newBalance, stakeable_balance: newStakeable, updated_at: nowIso() };
   if (paymentType === 'activation') {
