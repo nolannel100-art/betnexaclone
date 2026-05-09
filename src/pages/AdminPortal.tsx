@@ -16,7 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { calculateMatchMinute } from "@/lib/gameTimeCalculator";
 import balanceSyncService from "@/lib/balanceSyncService";
-import { formatTransactionDateInEAT, formatTimeInEAT } from "@/lib/timezoneFormatter";
+import { formatDateInEAT, formatTransactionDateInEAT, formatTimeInEAT } from "@/lib/timezoneFormatter";
 import { MatchEventEditor } from "@/components/MatchEventEditor";
 import { ActiveMembers } from "@/components/ActiveMembers";
 import { FetchGamesFetchModal } from "@/components/FetchGamesFetchModal";
@@ -3637,6 +3637,7 @@ const AdminPortal = () => {
                             <p><strong>User ID:</strong> <span className="font-mono font-bold text-primary">{user.betnexaId || 'N/A'}</span></p>
                             <p><strong>Email:</strong> {user.email}</p>
                             <p><strong>Phone:</strong> {user.phone}</p>
+                            <p><strong>Member Since:</strong> {user.createdAt ? formatDateInEAT(user.createdAt) : user.joinDate || 'N/A'}</p>
                             <p><strong>Password:</strong> <span className="font-mono font-bold text-primary">{user.password}</span></p>
                             {user.isBanned && (
                               <p><Badge className="bg-red-500/20 text-red-500 flex items-center gap-1 w-fit"><Ban className="h-3 w-3" /> BANNED</Badge></p>
