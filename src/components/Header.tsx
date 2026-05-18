@@ -39,7 +39,7 @@ export function Header() {
     const email = user?.email || 'N/A';
     const message = `Hello BETNEXA Support Team,\n\nI am a registered user and I need assistance.\n\n--- Account Details ---\nName: ${name}\nBETNEXA ID: ${id}\nPhone: ${phone}\nEmail: ${email}\n`;
     const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/16092553472?text=${encoded}`, '_blank');
+    window.open(`https://wa.me/13204499184?text=${encoded}`, '_blank');
   };
 
   const handleDownloadAPK = async () => {
