@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, CheckCircle, XCircle, Clock, DollarSign, Users, UserPlus, BarChart3, Trophy, Settings, RefreshCw, Edit2, Save, ArrowDown, ArrowUp, Play, Pause, Square, Lock, Unlock, Shield, Zap, Upload, Image as ImageIcon, Loader2, Megaphone, Calendar, Download, Ban, Flame } from "lucide-react";
 import { type MatchMarkets } from "@/components/MatchCard";
 import { useMatches } from "@/context/MatchContext";
-import { useBets } from "@/context/BetContext";
+import { useBets, type PlacedBet } from "@/context/BetContext";
 import { useOdds, type GameOdds } from "@/context/OddsContext";
 import { useUserManagement } from "@/context/UserManagementContext";
 import { useUser } from "@/context/UserContext";
@@ -93,6 +93,8 @@ const AdminPortal = () => {
   const [showAddGame, setShowAddGame] = useState(false);
   const [showDarajaTestModal, setShowDarajaTestModal] = useState(false);
   const [showFetchGamesModal, setShowFetchGamesModal] = useState(false);
+  const [showBetDetailsDialog, setShowBetDetailsDialog] = useState(false);
+  const [selectedBetDetails, setSelectedBetDetails] = useState<PlacedBet | null>(null);
   const [adminTab, setAdminTab] = useState("games");
   const [showPinDialog, setShowPinDialog] = useState(false);
   const [pinInput, setPinInput] = useState("");
@@ -124,6 +126,45 @@ const AdminPortal = () => {
     } else {
       setPinError("Incorrect PIN. Access denied.");
       setPinInput("");
+    }
+  };
+
+  const openBetDetails = (bet: PlacedBet) => {
+    setSelectedBetDetails(bet);
+    setShowBetDetailsDialog(true);
+  };
+
+  const closeBetDetails = () => {
+    setSelectedBetDetails(null);
+    setShowBetDetailsDialog(false);
+  };
+
+  const getSelectionMarketName = (market: string) => {
+    if (!market) return "Unknown Market";
+    if (marketLabels[market]) return marketLabels[market];
+    switch (market) {
+      case "CS": return "CORRECT SCORE";
+      case "O/U": return "OVER/UNDER";
+      case "DC": return "DOUBLE CHANCE";
+      case "HT/FT": return "HALF TIME/FULL TIME";
+      case "BTTS": return "BOTH TEAMS TO SCORE";
+      case "1X2": return "1X2";
+      default:
+        return market.replace(/_/g, " ").toUpperCase();
+    }
+  };
+
+  const getSelectionPickLabel = (type: string) => {
+    if (!type) return "Unknown Pick";
+    const normalized = type.toString();
+    switch (normalized) {
+      case "bttsYes": return "Yes";
+      case "bttsNo": return "No";
+      case "home": return "Home";
+      case "away": return "Away";
+      case "draw": return "Draw";
+      default:
+        return normalized.replace(/_/g, " ").toUpperCase();
     }
   };
   const [selectedGameForEvents, setSelectedGameForEvents] = useState<{
@@ -4287,6 +4328,7 @@ const AdminPortal = () => {
                                   <th className="text-left p-2 font-semibold">Date & Time Placed</th>
                                   <th className="text-center p-2 font-semibold">Odds</th>
                                   <th className="text-center p-2 font-semibold">Selections</th>
+                                  <th className="text-center p-2 font-semibold">View</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border">
@@ -4330,6 +4372,11 @@ const AdminPortal = () => {
                                       </td>
                                       <td className="p-2 text-center">{bet.totalOdds.toFixed(2)}</td>
                                       <td className="p-2 text-center">{bet.selections.length}</td>
+                                      <td className="p-2 text-center">
+                                        <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => openBetDetails(bet)}>
+                                          View
+                                        </Button>
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -4391,6 +4438,7 @@ const AdminPortal = () => {
                                   <th className="text-left p-2 font-semibold">Date & Time Placed</th>
                                   <th className="text-center p-2 font-semibold">Odds</th>
                                   <th className="text-center p-2 font-semibold">Selections</th>
+                                  <th className="text-center p-2 font-semibold">View</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border">
@@ -4435,6 +4483,11 @@ const AdminPortal = () => {
                                       </td>
                                       <td className="p-2 text-center">{bet.totalOdds.toFixed(2)}</td>
                                       <td className="p-2 text-center">{bet.selections.length}</td>
+                                      <td className="p-2 text-center">
+                                        <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => openBetDetails(bet)}>
+                                          View
+                                        </Button>
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -4495,6 +4548,7 @@ const AdminPortal = () => {
                                   <th className="text-left p-2 font-semibold">Date & Time Placed</th>
                                   <th className="text-center p-2 font-semibold">Odds</th>
                                   <th className="text-center p-2 font-semibold">Selections</th>
+                                  <th className="text-center p-2 font-semibold">View</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border">
@@ -4539,6 +4593,11 @@ const AdminPortal = () => {
                                       </td>
                                       <td className="p-2 text-center">{bet.totalOdds.toFixed(2)}</td>
                                       <td className="p-2 text-center">{bet.selections.length}</td>
+                                      <td className="p-2 text-center">
+                                        <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => openBetDetails(bet)}>
+                                          View
+                                        </Button>
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -4649,6 +4708,88 @@ const AdminPortal = () => {
             )}
           </TabsContent>
         </Tabs>
+
+        <Dialog open={showBetDetailsDialog} onOpenChange={(open) => { if (!open) closeBetDetails(); }}>
+          <DialogContent className="sm:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Bet Details</DialogTitle>
+              <DialogDescription>Full bet review including teams, market, pick, and odds.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 p-2">
+              {selectedBetDetails ? (
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">User</p>
+                      <p className="font-medium text-foreground">{selectedBetDetails.username || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <p className="font-medium text-foreground">{selectedBetDetails.phone_number || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Bet ID</p>
+                      <p className="font-medium text-foreground">#{selectedBetDetails.betId}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Placed</p>
+                      <p className="font-medium text-foreground">{selectedBetDetails.date ? formatTransactionDateInEAT(selectedBetDetails.date) : 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Status</p>
+                      <p className="font-medium text-foreground">{selectedBetDetails.status}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Stake</p>
+                      <p className="font-medium text-foreground">KSH {selectedBetDetails.stake.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Odds</p>
+                      <p className="font-medium text-foreground">{selectedBetDetails.totalOdds.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Potential Win</p>
+                      <p className="font-medium text-foreground">KSH {selectedBetDetails.potentialWin.toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-foreground">Selections</h4>
+                    <div className="space-y-3">
+                      {selectedBetDetails.selections.map((selection, idx) => (
+                        <Card key={idx} className="rounded-lg border-border bg-card p-4">
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Match</p>
+                              <p className="font-medium text-foreground">{selection.match || selection.matchId || 'Unknown match'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Market</p>
+                              <p className="font-medium text-foreground">{getSelectionMarketName(selection.market)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Pick</p>
+                              <p className="font-medium text-foreground">{getSelectionPickLabel(selection.type)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Odds</p>
+                              <p className="font-medium text-foreground">{typeof selection.odds === 'number' ? selection.odds.toFixed(2) : String(selection.odds || 'N/A')}</p>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No bet selected.</p>
+              )}
+              <div className="flex justify-end">
+                <Button variant="ghost" onClick={closeBetDetails}>Close</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Fetch Games Modal */}
         <FetchGamesFetchModal
