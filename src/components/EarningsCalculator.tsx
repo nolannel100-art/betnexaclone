@@ -63,42 +63,40 @@ export function EarningsCalculator() {
   const fetchEarnings = async (start: string, end: string) => {
     setLoading(true);
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
-        const summaryResponse = await fetch(
-          `${apiUrl}/api/admin/earnings?startDate=${start}&endDate=${end}&phone=${adminPhone}`,
-          { headers: { 'Content-Type': 'application/json' }, method: 'GET' }
-        );
-        
-        if (summaryResponse.ok) {
-          const summaryData = await summaryResponse.json();
-          if (summaryData.success) {
-            setEarnings(summaryData.data);
-          }
-        } else {
-          console.warn(`[Earnings] Earnings endpoint returned status ${summaryResponse.status}`);
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const summaryResponse = await fetch(
+        `${apiUrl}/api/admin/earnings?startDate=${start}&endDate=${end}&phone=${adminPhone}`,
+        { headers: { 'Content-Type': 'application/json' }, method: 'GET' }
+      );
+      
+      if (summaryResponse.ok) {
+        const summaryData = await summaryResponse.json();
+        if (summaryData.success) {
+          setEarnings(summaryData.data);
         }
-      } catch (err) {
-        console.warn('[Earnings] Failed to fetch earnings summary:', err);
+      } else {
+        console.warn(`[Earnings] Earnings endpoint returned status ${summaryResponse.status}`);
       }
+    } catch (err) {
+      console.warn('[Earnings] Failed to fetch earnings summary:', err);
+    }
 
-      // Fetch daily breakdown (optional)
-      try {
-        const dailyResponse = await fetch(
-          `${apiUrl}/api/admin/earnings/daily?startDate=${start}&endDate=${end}&phone=${adminPhone}`,
-          { headers: { 'Content-Type': 'application/json' }, method: 'GET' }
-        );
-        
-        if (dailyResponse.ok) {
-          const dailyData = await dailyResponse.json();
-          if (dailyData.success) {
-            setDailyEarnings(dailyData.data);
-          }
+    // Fetch daily breakdown (optional)
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const dailyResponse = await fetch(
+        `${apiUrl}/api/admin/earnings/daily?startDate=${start}&endDate=${end}&phone=${adminPhone}`,
+        { headers: { 'Content-Type': 'application/json' }, method: 'GET' }
+      );
+      
+      if (dailyResponse.ok) {
+        const dailyData = await dailyResponse.json();
+        if (dailyData.success) {
+          setDailyEarnings(dailyData.data);
         }
-      } catch (err) {
-        console.warn('[Earnings] Failed to fetch daily breakdown:', err);
       }
-    } catch (error) {
-      console.error('Error in fetchEarnings:', error);
+    } catch (err) {
+      console.warn('[Earnings] Failed to fetch daily breakdown:', err);
     } finally {
       setLoading(false);
     }
