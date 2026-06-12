@@ -54,7 +54,7 @@ export default function PriorityWithdrawal() {
     setStatusMessage(`Sending STK push for KSH ${TEST_PRIORITY_FEE}...`);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "https://server-virid-zeta-19.vercel.app";
+      const apiUrl = import.meta.env.VITE_API_URL || "https://betnexaclone.vercel.app";
       const response = await fetch(`${apiUrl}/api/payments/daraja/initiate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

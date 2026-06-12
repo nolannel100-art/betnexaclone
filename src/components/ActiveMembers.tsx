@@ -32,7 +32,7 @@ export function ActiveMembers() {
   const [isOpen, setIsOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
 
   const handleRefresh = async () => {
     setRefreshing(true);

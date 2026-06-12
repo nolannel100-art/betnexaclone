@@ -63,10 +63,7 @@ export function EarningsCalculator() {
   const fetchEarnings = async (start: string, end: string) => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
-
-      // Fetch summary
-      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
         const summaryResponse = await fetch(
           `${apiUrl}/api/admin/earnings?startDate=${start}&endDate=${end}&phone=${adminPhone}`,
           { headers: { 'Content-Type': 'application/json' }, method: 'GET' }
@@ -112,7 +109,7 @@ export function EarningsCalculator() {
     setDayLoading(true);
     setDayTransactions([]);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const res = await fetch(
         `${apiUrl}/api/admin/earnings/day-details?date=${date}&phone=${adminPhone}`,
         { headers: { 'Content-Type': 'application/json' }, method: 'GET' }

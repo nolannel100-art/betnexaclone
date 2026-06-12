@@ -32,7 +32,7 @@ export const FetchGamesFetchModal = ({ isOpen, onClose, onExecute }: FetchGamesF
     setStep('fetching');
     setErrorMsg('');
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const adminPhone = localStorage.getItem("adminPhone") || localStorage.getItem("userPhone") || "0712345678";
       
       const response = await fetch(`${apiUrl}/api/admin/fetch-api-football/fetch-preview`, {

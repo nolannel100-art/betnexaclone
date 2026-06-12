@@ -161,7 +161,7 @@ export function BettingSlip({ items, onRemove, onClear }: BettingSlipProps) {
     setIsPlacing(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       
       // Call backend to place bet and deduct balance
       const response = await fetch(`${apiUrl}/api/bets/place`, {

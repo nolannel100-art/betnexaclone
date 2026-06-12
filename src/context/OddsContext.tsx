@@ -89,7 +89,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     fetchInProgressRef.current = true;
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       
       console.log('🔄 Fetching fresh games from:', apiUrl);
 
@@ -191,7 +191,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       
       if (liveGames.length === 0) return; // No live games, skip fetch
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const now = Date.now();
 
       // Fetch timer for each live game in parallel
@@ -271,7 +271,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   //   const syncApiGames = async () => {
   //     if (!hasApiGamesNeedingSync()) return;
   //
-  //     const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+  //     const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
   //
   //     try {
   //       // 1. Trigger a server-side sync of scores + odds from API-Football
@@ -307,7 +307,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     const marketCheckInterval = setInterval(async () => {
       if (gamesRef.current.length === 0) return;
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       
       try {
         const controller = new AbortController();
@@ -409,7 +409,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   // ⛔ Daily schedule maintenance DISABLED — automatic bootstrap-schedule fetch removed
   // useEffect(() => {
   //   const ensureSchedule = async () => {
-  //     const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+  //     const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
   //     try {
   //       const resp = await fetch(`${apiUrl}/api/live/bootstrap-schedule`, {
   //         signal: AbortSignal.timeout(45000),
@@ -430,7 +430,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
 
   const refreshGames = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout

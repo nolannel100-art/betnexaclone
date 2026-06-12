@@ -60,7 +60,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
   const fetchUsersFromBackend = async (phone?: string) => {
     try {
       console.log('📥 Fetching users from backend...');
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const queryParam = phone ? `?phone=${encodeURIComponent(phone)}` : '';
       const response = await fetch(`${apiUrl}/api/admin/users${queryParam}`, {
         method: 'GET',

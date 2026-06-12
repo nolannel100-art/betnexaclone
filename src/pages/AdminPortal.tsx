@@ -246,7 +246,7 @@ const AdminPortal = () => {
   useEffect(() => {
     const fetchServerBetFlags = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
         const adminPhone = localStorage.getItem("adminPhone") || localStorage.getItem("userPhone") || "0712345678";
         const smsResp = await fetch(`${apiUrl}/api/admin/bets/sms-triggered?phone=${adminPhone}`);
         const smsData = await smsResp.json();
@@ -389,7 +389,7 @@ const AdminPortal = () => {
   // Fetch transactions for a specific user
   const fetchUserTransactions = async (userId: string) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/transactions/user/${userId}`, {
         headers: { 'Content-Type': 'application/json' }
       });
@@ -460,7 +460,7 @@ const AdminPortal = () => {
     setBroadcastResult(null);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/sms-broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -514,7 +514,7 @@ const AdminPortal = () => {
 
     setDeletingMarkedBets(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const betIdsArray = Array.from(markedBets);
       
       const response = await fetch(`${apiUrl}/api/admin/bets/bulk-delete`, {
@@ -569,7 +569,7 @@ const AdminPortal = () => {
 
     setDeletingMarkedGames(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const gameIdsArray = Array.from(markedGames);
       
       const response = await fetch(`${apiUrl}/api/admin/games/bulk-delete`, {
@@ -606,7 +606,7 @@ const AdminPortal = () => {
     try {
       console.log(`🔓 Admin activating withdrawal for user: ${userId} (${userName})`);
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/users/${userId}/activate-withdrawal`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -649,7 +649,7 @@ const AdminPortal = () => {
     try {
       console.log(`🔒 Admin deactivating withdrawal for user: ${userId} (${userName})`);
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/users/${userId}/deactivate-withdrawal`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -697,7 +697,7 @@ const AdminPortal = () => {
       }
 
       // Call backend to delete user
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/payments/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
@@ -752,7 +752,7 @@ const AdminPortal = () => {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1134,7 +1134,7 @@ const AdminPortal = () => {
         ? new Date(pg.kickoffDateTime + ':00+03:00').toISOString() // EAT = UTC+3
         : new Date().toISOString();
       const markets: Record<string, number> = { home: h, draw: d, away: a };
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1209,7 +1209,7 @@ const AdminPortal = () => {
         return;
       }
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${id}/markets`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1238,7 +1238,7 @@ const AdminPortal = () => {
     if (!game) return;
     const newHot = !game.isHot;
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${id}/hot`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1260,7 +1260,7 @@ const AdminPortal = () => {
   const removeGameHandler = async (id: string) => {
     if (!confirm('Are you sure you want to delete this game?')) return;
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -1290,7 +1290,7 @@ const AdminPortal = () => {
     try {
       const now = new Date().toISOString();
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1342,7 +1342,7 @@ const AdminPortal = () => {
 
     try {
       const now = new Date().toISOString();
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1391,7 +1391,7 @@ const AdminPortal = () => {
       const newKickoffStartTimeMs = kickoffStartMs + pauseDuration;
       const newKickoffStartTime = new Date(newKickoffStartTimeMs).toISOString();
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1470,7 +1470,7 @@ const AdminPortal = () => {
       // Preserve existing DB markets, only update 1X2 odds
       const existingMarkets = game.markets || {};
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}/score`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1510,7 +1510,7 @@ const AdminPortal = () => {
     if (!game) return;
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}/end`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1546,7 +1546,7 @@ const AdminPortal = () => {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}/revert`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1578,7 +1578,7 @@ const AdminPortal = () => {
     if (!game) return;
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       console.log(`⏱️  Marking halftime for game: ${gameId}`);
       
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}/halftime`, {
@@ -1611,7 +1611,7 @@ const AdminPortal = () => {
     if (!game) return;
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       console.log(`▶️  Resuming second half for game: ${gameId}`);
       
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}/resume-second-half`, {
@@ -1652,7 +1652,7 @@ const AdminPortal = () => {
   const markGameLive = async (gameId: string) => {
     if (!ensureManualGame(gameId)) return;
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       console.log(`🔴 Marking game as live: ${gameId}`);
       
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}`, {
@@ -1691,7 +1691,7 @@ const AdminPortal = () => {
     let marketsSaved = false;
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       console.log(`✏️  Updating game details: ${gameId}`);
       
       // Update game details (league, teams, kickoff, 1X2 odds)
@@ -1806,7 +1806,7 @@ const AdminPortal = () => {
     if (!game) return;
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       console.log(`⏱️  Setting custom time for game: ${gameId} to ${minute}:${seconds}`);
       
       const response = await fetch(`${apiUrl}/api/admin/games/${gameId}/set-time`, {
@@ -1888,7 +1888,7 @@ const AdminPortal = () => {
     if (!bet?.id || sendingBetSmsId === bet.id || smsTriggeredBets[bet.id]) return;
     setSendingBetSmsId(bet.id);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const adminPhone = localStorage.getItem("adminPhone") || localStorage.getItem("userPhone") || loggedInUser?.phone || "0712345678";
       const response = await fetch(`${apiUrl}/api/admin/bets/${bet.id}/send-sms`, {
         method: 'POST',
@@ -1928,7 +1928,7 @@ const AdminPortal = () => {
   const fetchFailedPayments = async () => {
     setLoadingPayments(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/payments/admin/failed`);
       const data = await response.json();
       if (data.success) {
@@ -1945,7 +1945,7 @@ const AdminPortal = () => {
   const fetchAllTransactions = async () => {
     setLoadingPayments(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const phone = loggedInUser?.phone || '';
       const response = await fetch(`${apiUrl}/api/admin/transactions?phone=${encodeURIComponent(phone)}`, {
         method: 'GET',
@@ -2027,7 +2027,7 @@ const AdminPortal = () => {
   const fetchAllPayments = async () => {
     setLoadingPayments(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const phone = loggedInUser?.phone || '';
       const response = await fetch(`${apiUrl}/api/admin/payments?phone=${encodeURIComponent(phone)}`, {
         method: 'GET',
@@ -2050,7 +2050,7 @@ const AdminPortal = () => {
       setResolvingPayment(externalReference);
       const data = resolutionData[externalReference] || {};
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(
         `${apiUrl}/api/payments/admin/resolve/${externalReference}`,
         {
@@ -2129,7 +2129,7 @@ const AdminPortal = () => {
       attempts += 1;
 
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
         const response = await fetch(`${apiUrl}/api/admin/daraja-test/status?phone=${encodeURIComponent(loggedInUser?.phone || '')}&checkoutRequestId=${encodeURIComponent(checkoutRequestId)}`);
         const data = await response.json();
 
@@ -2213,7 +2213,7 @@ const AdminPortal = () => {
     setDarajaTestMessage('Sending STK push request to Daraja...');
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/daraja-test/deposit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -3578,7 +3578,7 @@ const AdminPortal = () => {
                               variant="hero"
                               onClick={async () => {
                                 try {
-                                  const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+                                  const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
 
                                   // If user details are being edited, call the backend API
                                   if (
@@ -3756,7 +3756,7 @@ const AdminPortal = () => {
                                 const action = user.isBanned ? 'unban' : 'ban';
                                 if (!window.confirm(`Are you sure you want to ${action} ${user.name}?`)) return;
                                 try {
-                                  const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+                                  const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
                                   const res = await fetch(`${apiUrl}/api/admin/users/${user.id}/ban`, {
                                     method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
@@ -4042,7 +4042,7 @@ const AdminPortal = () => {
               const failRate = resolved.length > 0 ? 100 - successRate : 0;
 
               const updateFeeStatus = async (feeId: string, status: string) => {
-                const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+                const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
                 const endpoint = status === 'failed'
                   ? `${apiUrl}/api/admin/activation-fees/${feeId}/mark-rejected`
                   : status === 'pending'
@@ -4797,7 +4797,7 @@ const AdminPortal = () => {
           onClose={() => setShowFetchGamesModal(false)}
           onExecute={async (games) => {
             try {
-              const apiUrl = import.meta.env.VITE_API_URL || 'https://server-virid-zeta-19.vercel.app';
+              const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
               
               // Step 1: Fetch existing games to check for duplicates
               let existingGameIds = new Set<string>();
