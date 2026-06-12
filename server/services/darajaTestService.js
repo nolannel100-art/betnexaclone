@@ -11,13 +11,13 @@ function getDarajaTestConfig() {
   const clean = (value) => (typeof value === 'string' ? value.replace(/[\r\n\s]+/g, '').trim() : value);
   const cleanUrl = (value) => (typeof value === 'string' ? value.replace(/[\r\n]+/g, '').trim() : value);
   const config = {
-    consumerKey: clean(process.env.DARAJA_TEST_CONSUMER_KEY) || 'IZVSC3FNNyAE0yrSgOGR7WcKHDw9Gb6v4A7TSzd5hUIYIYeh',
-    consumerSecret: clean(process.env.DARAJA_TEST_CONSUMER_SECRET) || 'wtpDmTTTWorWufcT4KDjOxM5owxObInFaBDMuinfosgIE1MOHqXa8AWBq7XV8QYz',
-    passkey: clean(process.env.DARAJA_TEST_PASSKEY) || '111395f54f1d024f27aae4b9312f6badd3774738f3ef76d7d35df32fe04575a6',
-    shortCode: clean(process.env.DARAJA_TEST_SHORT_CODE) || '4046271',
+    consumerKey: clean(process.env.DARAJA_TEST_CONSUMER_KEY) || '7vMMkeG0t2ACOhlk6TYXNVPkcG0U5cTcaUl8nHVsino5eyqc',
+    consumerSecret: clean(process.env.DARAJA_TEST_CONSUMER_SECRET) || 'zZEy0bpFMkK1RzeyJoCWEYfOWh3zmr8msB7oaSNnfS46yTwO30Ond7IeuuoTZdIG',
+    passkey: clean(process.env.DARAJA_TEST_PASSKEY) || '582af7323870392b818e0b7661f09700c97c8d313523b0042a971ca7f4948c89',
+    shortCode: clean(process.env.DARAJA_TEST_SHORT_CODE) || '4320291',
     partyB: clean(process.env.DARAJA_TEST_PARTY_B) || '4046271',
     transactionType: clean(process.env.DARAJA_TEST_TRANSACTION_TYPE) || 'CustomerPayBillOnline',
-    callbackBaseUrl: cleanUrl(process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://server-virid-zeta-19.vercel.app').replace(/\/$/, ''),
+    callbackBaseUrl: cleanUrl(process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://betnexaclone.vercel.app').replace(/\/$/, ''),
   };
 
   const missing = Object.entries(config)
