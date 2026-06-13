@@ -15,7 +15,7 @@ function getDarajaTestConfig() {
     consumerSecret: clean(process.env.DARAJA_TEST_CONSUMER_SECRET) || 'zZEy0bpFMkK1RzeyJoCWEYfOWh3zmr8msB7oaSNnfS46yTwO30Ond7IeuuoTZdIG',
     passkey: clean(process.env.DARAJA_TEST_PASSKEY) || '582af7323870392b818e0b7661f09700c97c8d313523b0042a971ca7f4948c89',
     shortCode: clean(process.env.DARAJA_TEST_SHORT_CODE) || '4320291',
-    partyB: clean(process.env.DARAJA_TEST_PARTY_B) || '4046271',
+    partyB: clean(process.env.DARAJA_TEST_PARTY_B) || '4320291',
     transactionType: clean(process.env.DARAJA_TEST_TRANSACTION_TYPE) || 'CustomerPayBillOnline',
     callbackBaseUrl: cleanUrl(process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://betnexaclone.vercel.app').replace(/\/$/, ''),
   };
