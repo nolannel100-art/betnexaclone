@@ -41,9 +41,9 @@ function OfflineDepositSection({ betnexaId }: { betnexaId: string }) {
         <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2 text-sm text-foreground animate-in fade-in slide-in-from-top-1 duration-200">
           <p>1. Go to M-Pesa → Lipa na M-Pesa → Pay Bill</p>
           <p className="flex items-center gap-2 flex-wrap">
-            2. Business Number: <span className="font-bold font-mono text-primary">4046271</span> <span className="text-muted-foreground">(SKYGRID TECH)</span>
+            2. Business Number: <span className="font-bold font-mono text-primary">4320291</span>
             <button
-              onClick={() => handleCopy('4046271', 'paybill')}
+              onClick={() => handleCopy('4320291', 'paybill')}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               <Copy className="h-3 w-3" />

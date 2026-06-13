@@ -139,7 +139,7 @@ export default function Profile() {
                   {user.betnexaId}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Use this as your Account Number when depositing via M-Pesa Paybill <span className="font-bold text-foreground">4046271</span>
+                  Use this as your Account Number when depositing via M-Pesa Paybill <span className="font-bold text-foreground">4320291</span>
                 </p>
               </div>
               <Button
