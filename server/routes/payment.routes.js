@@ -1342,10 +1342,21 @@ router.post('/daraja/initiate', async (req, res) => {
       priority: 'Priority withdrawal fee',
     };
 
+    let accountReference;
+    if (paymentType === 'deposit') {
+      accountReference = betnexaId;
+    } else if (paymentType === 'activation') {
+      accountReference = `ACTIVATE ${betnexaId}`;
+    } else if (paymentType === 'priority') {
+      accountReference = `PRIORITY ${betnexaId}`;
+    } else {
+      accountReference = `BETNEXA ${betnexaId}`;
+    }
+
     const result = await initiateAdminTestStkPush({
       phoneNumber: normalizedPhone,
       amount: parsedAmount,
-      accountReference: `BETNEXA ${betnexaId}`,
+      accountReference: accountReference,
       transactionDesc: descriptionMap[paymentType] || 'Betnexa payment',
       callbackUrl,
     });
