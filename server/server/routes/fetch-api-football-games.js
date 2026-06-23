@@ -306,12 +306,11 @@ router.post('/test', (req, res) => {
 });
 
 // POST: Fetch prematch games from API Football (preview only, no save)
-// POST: Fetch preview - Get games from API Football with OPTIMIZATIONS for free tier
+// POST: Fetch preview - Get games from API Football
 router.post('/fetch-preview', checkAdmin, async (req, res) => {
   try {
-    const DAYS_TO_FETCH = req.body.days || 15; // Default: 15 days (was 3) — can be customized per request
-    console.log(`\n🔍 [API Football Fetch Preview - OPTIMIZED] Fetching prematch games for the next ${DAYS_TO_FETCH} days...`);
-    console.log(`   📊 Optimized for FREE TIER: bulk odds fetching, pagination, smart filtering`);
+    const DAYS_TO_FETCH = 3; // Fetch today + next 2 days
+    console.log(`\n🔍 [API Football Fetch Preview] Fetching prematch games for the next ${DAYS_TO_FETCH} days...`);
 
     // Use the test API key for this fetch preview endpoint
     const TEST_API_KEY = '49f4155b78d58351ed95b5c3bbcebd9e';
@@ -360,38 +359,23 @@ router.post('/fetch-preview', checkAdmin, async (req, res) => {
 
     for (const dateStr of datesToFetch) {
       try {
-        // Step 1: Fetch fixtures for this date with PAGINATION (per_page=100 instead of default 20)
-        console.log(`\n📅 Fetching fixtures for ${dateStr} with pagination (max 100 per page)...`);
-        
-        let allFixtures = [];
-        let currentPage = 1;
-        let totalPages = 1;
-        
-        do {
-          const fixturesJson = await apiGetTest('/fixtures', {
-            date: dateStr,
-            timezone: TZ,
-            page: currentPage,
-            per_page: 100  // ✅ OPTIMIZATION: Get 100 per page instead of default 20 (5x improvement)
-          });
-          
-          const pageFixtures = fixturesJson.response || [];
-          allFixtures = allFixtures.concat(pageFixtures);
-          totalPages = fixturesJson.paging?.total || 1;
-          
-          console.log(`   📄 Page ${currentPage}/${totalPages}: Got ${pageFixtures.length} fixtures`);
-          currentPage++;
-        } while (currentPage <= totalPages);
+        // Step 1: Fetch fixtures for this date
+        console.log(`\n📅 Fetching fixtures for ${dateStr}...`);
+        const fixturesJson = await apiGetTest('/fixtures', {
+          date: dateStr,
+          timezone: TZ
+        });
+        const fixtures = fixturesJson.response || [];
 
-        console.log(`   📊 Total fixtures on ${dateStr}: ${allFixtures.length} (was avg ~20 before optimization)`);
-        
-        if (!allFixtures || allFixtures.length === 0) {
+        console.log(`   📊 Found ${fixtures.length} fixtures on ${dateStr}`);
+
+        if (!fixtures || fixtures.length === 0) {
           console.log(`   ⚠️ No fixtures for ${dateStr}`);
           continue;
         }
 
         // Filter to only Not Started (prematch) fixtures
-        const prematchFixtures = allFixtures.filter(f => f?.fixture?.status?.short === 'NS');
+        const prematchFixtures = fixtures.filter(f => f?.fixture?.status?.short === 'NS');
         console.log(`   ⚽ ${prematchFixtures.length} prematch (NS) fixtures on ${dateStr}`);
 
         if (prematchFixtures.length === 0) {
@@ -399,28 +383,22 @@ router.post('/fetch-preview', checkAdmin, async (req, res) => {
           continue;
         }
 
-        // Step 2: Fetch odds in bulk by date with PAGINATION (per_page=100)
-        console.log(`\n📈 Fetching odds in bulk for ${dateStr} with pagination...`);
+        // Step 2: Fetch odds in bulk by date (single API call instead of per-fixture)
+        console.log(`\n📈 Fetching odds in bulk for ${dateStr}...`);
         let allOddsPages = [];
-        let currentOddsPage = 1;
-        let totalOddsPages = 1;
+        let currentPage = 1;
+        let totalPages = 1;
 
-        // ✅ OPTIMIZATION: Paginate odds with per_page=100 to get 100 odds sets per call
+        // Paginate through odds results
         do {
-          const oddsJson = await apiGetTest(`/odds`, {
-            date: dateStr,
-            timezone: TZ,
-            page: currentOddsPage,
-            per_page: 100  // ✅ OPTIMIZATION: Get 100 odds sets per page (vs default 20)
-          });
-          
+          const oddsJson = await apiGetTest(`/odds?date=${dateStr}&timezone=${TZ}&page=${currentPage}`, {});
+          // apiGetTest returns the full json object now
           const pageData = oddsJson.response || [];
           allOddsPages = allOddsPages.concat(pageData);
-          totalOddsPages = oddsJson.paging?.total || 1;
-          
-          console.log(`   ✅ Odds page ${currentOddsPage}/${totalOddsPages}: Got ${pageData.length} odds entries`);
-          currentOddsPage++;
-        } while (currentOddsPage <= totalOddsPages);
+          totalPages = oddsJson.paging?.total || 1;
+          console.log(`   ✅ Got ${pageData.length} odds entries (page ${currentPage}/${totalPages})`);
+          currentPage++;
+        } while (currentPage <= totalPages);
 
         console.log(`   📊 Total odds entries fetched for ${dateStr}: ${allOddsPages.length}`);
 
@@ -488,11 +466,11 @@ router.post('/fetch-preview', checkAdmin, async (req, res) => {
           }
         }
 
-        // Second pass: try per-fixture odds for games not in bulk response (OPTIMIZED: reduced from 30 to 10 limit)
+        // Second pass: try per-fixture odds for games not in bulk response
         if (fixturesWithoutBulkOdds.length > 0) {
-          console.log(`\n📡 Fetching per-fixture odds for remaining ${fixturesWithoutBulkOdds.length} fixtures...`);
+          console.log(`\n📡 Fetching per-fixture odds for ${fixturesWithoutBulkOdds.length} remaining fixtures on ${dateStr}...`);
           let perFixtureFetched = 0;
-          const PER_FIXTURE_LIMIT = 10;  // ✅ OPTIMIZATION: Reduced from 30 since bulk fetching gets most now
+          const PER_FIXTURE_LIMIT = 30;
 
           for (const fixture of fixturesWithoutBulkOdds) {
             if (perFixtureFetched >= PER_FIXTURE_LIMIT) break;
@@ -544,11 +522,7 @@ router.post('/fetch-preview', checkAdmin, async (req, res) => {
       }
     }
 
-    console.log(`\n✅ Fetch OPTIMIZED - Summary for ${DAYS_TO_FETCH} days:`);
-    console.log(`   📊 Total matches fetched: ${games.length}`);
-    console.log(`   📈 Average per day: ${Math.round(games.length / DAYS_TO_FETCH)} matches`);
-    console.log(`   🚀 Estimated improvement: 5-7x more matches than before (was ~20/day, now ${Math.round(games.length / DAYS_TO_FETCH)}/day)`);
-    console.log(`   💾 API requests used: ~${Math.ceil(DAYS_TO_FETCH * 1.5)} (vs ~${Math.ceil(DAYS_TO_FETCH * 10)} before optimization)`);
+    console.log(`\n✅ Fetched ${games.length} prematch games across ${DAYS_TO_FETCH} days from API Football`);
 
     if (games.length === 0) {
       return res.json({
@@ -557,8 +531,7 @@ router.post('/fetch-preview', checkAdmin, async (req, res) => {
         game_count: 0,
         games: [],
         dates_checked: datesToFetch,
-        next_step: 'Try again later or check API Football for available matches',
-        optimization_notes: 'Endpoint is optimized for free tier with pagination (per_page=100) and bulk odds fetching'
+        next_step: 'Try again later or check API Football for available matches'
       });
     }
 
@@ -568,12 +541,9 @@ router.post('/fetch-preview', checkAdmin, async (req, res) => {
       game_count: games.length,
       matches_fetched: games.length,
       dates_checked: datesToFetch,
-      average_per_day: Math.round(games.length / DAYS_TO_FETCH),
       max_limit: 'unlimited',
       games: games,
-      optimization_notes: '✅ Optimized for free tier: pagination (100/page), bulk odds, reduced per-fixture calls',
-      next_step: 'Call /api/admin/fetch-api-football/execute with the games to add them to the site',
-      customize_days: 'Send { "days": N } in request body to fetch N days (default: 15, max: 30)'
+      next_step: 'Call /api/admin/fetch-api-football/execute with the games to add them to the site'
     });
 
   } catch (error) {

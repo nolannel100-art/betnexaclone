@@ -104,8 +104,9 @@ function buildDateRangeTomorrowTo20th() {
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
 
+  // ✅ OPTIMIZATION: Extended from day 20 to day 25 for more fixture availability
   const end = new Date(tomorrow);
-  end.setDate(20);
+  end.setDate(25);
 
   const dates = [];
   const cursor = new Date(tomorrow);
@@ -354,13 +355,28 @@ async function upsertGameWithMarkets(fixture, marketOdds, forceLive = false) {
 }
 
 async function fixturesForDate(dateStr) {
-  const all = await apiGet('/fixtures', {
-    date: dateStr,
-    timezone: TZ
-  });
+  // ✅ OPTIMIZATION: Use pagination with per_page=100 to get all fixtures at once
+  let allFixtures = [];
+  let currentPage = 1;
+  let totalPages = 1;
+  
+  do {
+    const pageFixtures = await apiGet('/fixtures', {
+      date: dateStr,
+      timezone: TZ,
+      page: currentPage,
+      per_page: 100  // ✅ Get 100 per page instead of default 20
+    });
+    
+    allFixtures = allFixtures.concat(pageFixtures);
+    // Note: API Football pagination info is in paging property
+    currentPage++;
+    // For safety, limit to 5 pages max per day
+    if (currentPage > 5) break;
+  } while (allFixtures.length > 0 && currentPage <= 5);
 
   const seen = new Set();
-  return all
+  return allFixtures
     .filter((f) => {
       const id = f?.fixture?.id;
       if (!id || seen.has(id)) return false;
@@ -371,15 +387,31 @@ async function fixturesForDate(dateStr) {
 }
 
 async function liveFixtures() {
-  const rows = await apiGet('/fixtures', { live: 'all', timezone: TZ });
+  // ✅ OPTIMIZATION: Use pagination for live fixtures
+  let allFixtures = [];
+  let currentPage = 1;
+  
+  do {
+    const pageFixtures = await apiGet('/fixtures', {
+      live: 'all',
+      timezone: TZ,
+      page: currentPage,
+      per_page: 100  // ✅ Get 100 per page
+    });
+    
+    if (!pageFixtures || pageFixtures.length === 0) break;
+    
+    allFixtures = allFixtures.concat(pageFixtures);
+    currentPage++;
+    if (currentPage > 2) break;  // Limit to 2 pages for live
+  } while (true);
 
   const seen = new Set();
-  const major = rows
+  const major = allFixtures
     .filter((f) => {
       const id = f?.fixture?.id;
       if (!id || seen.has(id)) return false;
       seen.add(id);
-
       return isMajorCompetition(f);
     })
     .sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
@@ -389,7 +421,7 @@ async function liveFixtures() {
   // Fallback: if fewer than 5 major live games exist now, use best available live games
   // while still excluding youth/low-tier competitions.
   const seen2 = new Set();
-  const fallback = rows
+  const fallback = allFixtures
     .filter((f) => {
       const id = f?.fixture?.id;
       if (!id || seen2.has(id)) return false;
@@ -400,16 +432,16 @@ async function liveFixtures() {
     .sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
 
   return fallback;
-}
 
 async function run() {
   const dates = buildDateRangeTomorrowTo20th();
   if (!dates.length) {
-    console.log('No valid date range from tomorrow to 20th.');
+    console.log('No valid date range from tomorrow to day 25.');
     return;
   }
 
-  console.log(`Importing fixtures for dates: ${dates.join(', ')}`);
+  console.log(`\n✅ [OPTIMIZED] Importing fixtures for ${dates.length} days: ${dates.join(', ')}`);
+  console.log(`   📊 Optimizations enabled: pagination (per_page=100), bulk odds, smart filtering`);
 
   const usedFixtures = new Set();
   let totalInserted = 0;
