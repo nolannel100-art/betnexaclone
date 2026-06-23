@@ -326,7 +326,8 @@ async function ensureUserDarajaFunding({
   }
 
   const previousBalance = parseFloat(user.account_balance) || 0;
-  const prevStakeable = parseFloat(user.stakeable_balance) || 0;
+  // FIX: Use nullish coalescing to fall back to account_balance for legacy users with NULL stakeable_balance
+  const prevStakeable = parseFloat(user.stakeable_balance) ?? parseFloat(user.account_balance) || 0;
   const creditedAmount = parseFloat(completedTx.amount) || 0;
   const newStakeable = prevStakeable + creditedAmount;
   const newBalance = newStakeable + (parseFloat(user.withdrawable_balance) || 0);

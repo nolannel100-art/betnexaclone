@@ -3767,7 +3767,8 @@ router.put('/activation-fees/:feeId/mark-completed', checkAdmin, async (req, res
 
       if (!userError && user) {
         const newBalance = (parseFloat(user.account_balance) || 0) + parseFloat(fee.amount);
-        const userUpdate = { account_balance: newBalance };
+        // FIX: Update both account_balance and stakeable_balance to ensure split balance consistency
+        const userUpdate = { account_balance: newBalance, stakeable_balance: newBalance };
 
         // If this is a KSH 1000 activation fee, also activate the user's withdrawal capability
         if (fee.fee_type === 'activation') {
