@@ -4073,7 +4073,7 @@ const AdminPortal = () => {
                 <>
                   <div className="mt-8 mb-2">
                     <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">Activation Fees</h3>
-                    <p className="text-xs text-muted-foreground mt-1">KSH 10 withdrawal activation &amp; KSH 5 priority fees</p>
+                    <p className="text-xs text-muted-foreground mt-1">KSH 1000 withdrawal activation &amp; KSH 449 priority fees</p>
                     {resolved.length > 0 && (
                       <div className="mt-2 space-y-1">
                         <div className="flex items-center gap-3">

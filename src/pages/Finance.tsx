@@ -15,8 +15,8 @@ import { useTransactions, type Transaction } from "@/context/TransactionContext"
 import balanceSyncService from "@/lib/balanceSyncService";
 import { formatTransactionDateInEAT } from "@/lib/timezoneFormatter";
 
-const TEST_MIN_DEPOSIT_AMOUNT = 1;
-const TEST_ACTIVATION_FEE = 10;
+const TEST_MIN_DEPOSIT_AMOUNT = 500;
+const TEST_ACTIVATION_FEE = 1000;
 
 function OfflineDepositSection({ betnexaId }: { betnexaId: string }) {
   const [expanded, setExpanded] = useState(false);
