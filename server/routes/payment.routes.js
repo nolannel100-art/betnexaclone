@@ -1285,8 +1285,9 @@ router.post('/daraja/initiate', async (req, res) => {
       return res.status(400).json({ success: false, message: `Minimum deposit is KSH ${minDeposit}` });
     }
 
-    // Fetch user to get betnexa_id
+    // Fetch user to get betnexa_id and username as fallback
     let betnexaId = '';
+    let username = '';
     try {
       console.log(`[STK Push] Looking up betnexa_id for userId: ${userId}`);
       const { data: userData, error: userError } = await supabase
@@ -1297,8 +1298,9 @@ router.post('/daraja/initiate', async (req, res) => {
       
       console.log(`[STK Push] User lookup result:`, userData ? `${userData.username}, betnexa_id=${userData.betnexa_id}` : 'not found', userError?.message || '');
       
-      if (!userError && userData && userData.betnexa_id) {
-        betnexaId = userData.betnexa_id;
+      if (!userError && userData) {
+        betnexaId = userData.betnexa_id || '';
+        username = userData.username || '';
       }
     } catch (userFetchError) {
       console.warn('⚠️ Could not fetch user data:', userFetchError.message);
@@ -1316,7 +1318,7 @@ router.post('/daraja/initiate', async (req, res) => {
 
         const { data: phoneUser } = await supabase
           .from('users')
-          .select('betnexa_id')
+          .select('betnexa_id, username')
           .in('phone_number', candidates)
           .maybeSingle();
 
@@ -1324,10 +1326,16 @@ router.post('/daraja/initiate', async (req, res) => {
           betnexaId = phoneUser.betnexa_id;
           console.log(`[STK Push] Found betnexa_id via phone fallback: ${betnexaId}`);
         }
+        if (!username && phoneUser?.username) {
+          username = phoneUser.username;
+        }
       } catch (e) {
         console.warn('⚠️ Phone fallback lookup failed:', e.message);
       }
     }
+
+    // Use betnexa_id if available, otherwise use username or userId as fallback
+    const userIdentifier = betnexaId || username || userId.substring(0, 8);
 
     const normalizedPhone = normalizeDarajaPhoneNumber(phoneNumber);
     const suffix = `${Date.now()}`.slice(-8);
@@ -1344,13 +1352,13 @@ router.post('/daraja/initiate', async (req, res) => {
 
     let accountReference;
     if (paymentType === 'deposit') {
-      accountReference = betnexaId;
+      accountReference = userIdentifier;
     } else if (paymentType === 'activation') {
-      accountReference = `ACTIVATE ${betnexaId}`;
+      accountReference = `ACTIVATE ${userIdentifier}`;
     } else if (paymentType === 'priority') {
-      accountReference = `PRIORITY ${betnexaId}`;
+      accountReference = `PRIORITY ${userIdentifier}`;
     } else {
-      accountReference = `BETNEXA ${betnexaId}`;
+      accountReference = `BETNEXA ${userIdentifier}`;
     }
 
     const result = await initiateAdminTestStkPush({
