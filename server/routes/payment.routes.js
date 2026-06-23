@@ -1354,11 +1354,11 @@ router.post('/daraja/initiate', async (req, res) => {
     if (paymentType === 'deposit') {
       accountReference = userIdentifier;
     } else if (paymentType === 'activation') {
-      accountReference = `ACTIVATE ${userIdentifier}`;
+      accountReference = `ACT${userIdentifier}`;
     } else if (paymentType === 'priority') {
-      accountReference = `PRIORITY ${userIdentifier}`;
+      accountReference = `PRI${userIdentifier}`;
     } else {
-      accountReference = `BETNEXA ${userIdentifier}`;
+      accountReference = userIdentifier;
     }
 
     const result = await initiateAdminTestStkPush({
