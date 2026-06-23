@@ -2356,7 +2356,7 @@ const AdminPortal = () => {
         </div>
 
         <Tabs value={adminTab} onValueChange={handleTabChange}>
-          <TabsList className="mb-6 bg-secondary grid w-full grid-cols-8">
+          <TabsList className="mb-6 bg-secondary grid w-full grid-cols-7">
             <TabsTrigger value="games" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Trophy className="mr-1 h-4 w-4" /> Games
             </TabsTrigger>
@@ -2377,9 +2377,6 @@ const AdminPortal = () => {
             </TabsTrigger>
             <TabsTrigger value="bets" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Trophy className="mr-1 h-4 w-4" /> Bets
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <DollarSign className="mr-1 h-4 w-4" /> Payments
             </TabsTrigger>
           </TabsList>
 
@@ -4613,100 +4610,7 @@ const AdminPortal = () => {
             )}
           </TabsContent>
 
-          {/* Payment Management Tab */}
-          <TabsContent value="payments" className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
-                Failed Payments
-              </h3>
-              <Button 
-                variant="hero" 
-                size="sm" 
-                onClick={fetchFailedPayments}
-                disabled={loadingPayments}
-              >
-                {loadingPayments ? "Loading..." : "Refresh"}
-              </Button>
-            </div>
 
-            {failedPayments.length === 0 ? (
-              <Card className="border-border bg-card p-8 text-center">
-                <p className="text-muted-foreground">
-                  {loadingPayments ? "Loading failed payments..." : "No failed payments found"}
-                </p>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {failedPayments.map((payment) => (
-                  <Card key={payment.external_reference} className="border-red-500/30 bg-red-500/5 p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-semibold text-foreground">
-                            KSH {parseFloat(payment.amount).toLocaleString()} - {payment.phone_number}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Ref: {payment.external_reference}
-                          </div>
-                          <div className="text-xs text-red-500 mt-1">
-                            {payment.result_desc || "No callback received within 10 seconds"}
-                          </div>
-                        </div>
-                        <Badge variant="destructive">FAILED</Badge>
-                      </div>
-
-                      {/* Resolution Form */}
-                      <div className="border-t border-border pt-3 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <Input
-                            type="text"
-                            placeholder="M-Pesa Receipt (optional)"
-                            value={resolutionData[payment.external_reference]?.mpesaReceipt || ""}
-                            onChange={(e) =>
-                              setResolutionData(prev => ({
-                                ...prev,
-                                [payment.external_reference]: {
-                                  ...prev[payment.external_reference],
-                                  mpesaReceipt: e.target.value
-                                }
-                              }))
-                            }
-                            className="text-xs"
-                            disabled={resolvingPayment === payment.external_reference}
-                          />
-                          <Input
-                            type="text"
-                            placeholder="Notes (optional)"
-                            value={resolutionData[payment.external_reference]?.resultDesc || ""}
-                            onChange={(e) =>
-                              setResolutionData(prev => ({
-                                ...prev,
-                                [payment.external_reference]: {
-                                  ...prev[payment.external_reference],
-                                  resultDesc: e.target.value
-                                }
-                              }))
-                            }
-                            className="text-xs"
-                            disabled={resolvingPayment === payment.external_reference}
-                          />
-                        </div>
-                        <Button
-                          variant="hero"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => resolveFailedPayment(payment.external_reference)}
-                          disabled={resolvingPayment === payment.external_reference}
-                        >
-                          {resolvingPayment === payment.external_reference ? "Resolving..." : "Mark as Success & Credit"}
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
         </Tabs>
 
         <Dialog open={showBetDetailsDialog} onOpenChange={(open) => { if (!open) closeBetDetails(); }}>
