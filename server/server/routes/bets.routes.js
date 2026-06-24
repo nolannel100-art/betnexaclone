@@ -728,4 +728,159 @@ router.get('/admin/all', async (req, res) => {
   }
 });
 
+/**
+ * Generate a random alphanumeric code (5+ characters)
+ * Mix of uppercase, lowercase, and numbers
+ */
+function generateRandomCode(length = 6) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+/**
+ * POST /api/bets/share-betslip
+ * Store betslip data and generate a shareable code
+ * Format: https://betnexa.co.ke/{code}
+ */
+router.post('/share-betslip', async (req, res) => {
+  try {
+    const { selections } = req.body;
+
+    if (!selections || !Array.isArray(selections) || selections.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selections are required'
+      });
+    }
+
+    let code;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    // Generate unique code
+    while (!isUnique && attempts < maxAttempts) {
+      code = generateRandomCode(6);
+      const { data: existing } = await supabase
+        .from('betslip_shares')
+        .select('id')
+        .eq('code', code)
+        .maybeSingle();
+
+      if (!existing) {
+        isUnique = true;
+      }
+      attempts++;
+    }
+
+    if (!isUnique) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate unique code'
+      });
+    }
+
+    // Store betslip data
+    const { error } = await supabase
+      .from('betslip_shares')
+      .insert({
+        code,
+        selections: JSON.stringify(selections),
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+      });
+
+    if (error) {
+      console.error('❌ Failed to store betslip:', error.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create shareable link'
+      });
+    }
+
+    console.log(`✅ Betslip shared with code: ${code}`);
+
+    res.json({
+      success: true,
+      code,
+      link: `https://betnexa.co.ke/${code}`,
+      message: 'Betslip link created successfully'
+    });
+  } catch (error) {
+    console.error('❌ Share betslip error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to share betslip',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/bets/betslip/:code
+ * Retrieve betslip data by code
+ */
+router.get('/betslip/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    if (!code || code.length < 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid betslip code'
+      });
+    }
+
+    const { data, error } = await supabase
+      .from('betslip_shares')
+      .select('code, selections, created_at, expires_at')
+      .eq('code', code)
+      .maybeSingle();
+
+    if (error || !data) {
+      return res.status(404).json({
+        success: false,
+        message: 'Betslip not found'
+      });
+    }
+
+    // Check if expired
+    const expiresAt = new Date(data.expires_at);
+    if (expiresAt < new Date()) {
+      return res.status(410).json({
+        success: false,
+        message: 'Betslip link has expired'
+      });
+    }
+
+    let selections;
+    try {
+      selections = typeof data.selections === 'string' ? JSON.parse(data.selections) : data.selections;
+    } catch (e) {
+      console.error('Failed to parse selections:', e);
+      selections = [];
+    }
+
+    console.log(`✅ Retrieved betslip: ${code}`);
+
+    res.json({
+      success: true,
+      code,
+      selections,
+      created_at: data.created_at
+    });
+  } catch (error) {
+    console.error('❌ Get betslip error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve betslip',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;

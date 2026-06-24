@@ -300,13 +300,21 @@ export function BettingSlip({ items, onRemove, onClear }: BettingSlipProps) {
                 variant="outline" 
                 size="sm" 
                 className="flex-1 text-xs"
-                onClick={() => {
+                onClick={async () => {
                   try {
-                    const link = generateShareableLink(items);
+                    const link = await generateShareableLink(items);
+                    if (!link) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to generate share link. Please try again.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
                     navigator.clipboard.writeText(link);
                     toast({
                       title: "Link Copied!",
-                      description: "Share this link to let others view and place these selections.",
+                      description: `Share this link: ${link}`,
                     });
                   } catch (error) {
                     console.error("Failed to copy link:", error);

@@ -160,57 +160,61 @@ const Index = ({ sport = 'football' }: IndexProps) => {
 
   // Load picks from URL if shared link
   useEffect(() => {
-    let urlPicks = getPicksFromUrl();
-    
-    // Check sessionStorage for pending picks (from signup redirect)
-    if (urlPicks.length === 0) {
-      try {
-        const pendingPicks = sessionStorage.getItem("pendingPicks");
-        if (pendingPicks) {
-          // Restore the URL with picks parameter
-          const newUrl = `${window.location.pathname}?picks=${pendingPicks}`;
-          window.history.replaceState({}, "", newUrl);
+    const loadPicksFromUrl = async () => {
+      let urlPicks = await getPicksFromUrl();
+      
+      // Check sessionStorage for pending picks (from signup redirect)
+      if (urlPicks.length === 0) {
+        try {
+          const pendingPicks = sessionStorage.getItem("pendingPicks");
+          if (pendingPicks) {
+            // Restore the URL with picks parameter
+            const newUrl = `${window.location.pathname}?picks=${pendingPicks}`;
+            window.history.replaceState({}, "", newUrl);
+            
+            // Re-read from URL
+            urlPicks = await getPicksFromUrl();
+            sessionStorage.removeItem("pendingPicks");
+          }
+        } catch (error) {
+          console.error("Failed to restore pending picks:", error);
+        }
+      }
+      
+      if (urlPicks.length > 0) {
+        // Only load if bet slip is empty (to avoid overwriting)
+        if (betSlip.length === 0) {
+          // Show loading state if games are still loading
+          if (isLoadingGames && apiGames.length === 0) {
+            setIsLoadingBetslip(true);
+            setInvalidPicksMessage(""); // Clear any previous error
+            return;
+          }
           
-          // Re-read from URL
-          urlPicks = getPicksFromUrl();
-          sessionStorage.removeItem("pendingPicks");
-        }
-      } catch (error) {
-        console.error("Failed to restore pending picks:", error);
-      }
-    }
-    
-    if (urlPicks.length > 0) {
-      // Only load if bet slip is empty (to avoid overwriting)
-      if (betSlip.length === 0) {
-        // Show loading state if games are still loading
-        if (isLoadingGames && apiGames.length === 0) {
-          setIsLoadingBetslip(true);
-          setInvalidPicksMessage(""); // Clear any previous error
-          return;
-        }
-        
-        // Validate picks against current games
-        const validation = validatePicks(urlPicks, apiGames);
-        
-        if (validation.invalid) {
-          setInvalidPicksMessage(validation.message);
+          // Validate picks against current games
+          const validation = validatePicks(urlPicks, apiGames);
+          
+          if (validation.invalid) {
+            setInvalidPicksMessage(validation.message);
+            setIsLoadingBetslip(false);
+            // Don't load invalid picks
+            return;
+          }
+          
+          // Games loaded and validation passed
+          setBetSlip(validation.valid);
+          // Build selectedOdds map from URL picks
+          const oddsMap: Record<string, string> = {};
+          validation.valid.forEach(item => {
+            oddsMap[item.matchId] = `${item.matchId}-${item.type}`;
+          });
+          setSelectedOdds(oddsMap);
           setIsLoadingBetslip(false);
-          // Don't load invalid picks
-          return;
         }
-        
-        // Games loaded and validation passed
-        setBetSlip(validation.valid);
-        // Build selectedOdds map from URL picks
-        const oddsMap: Record<string, string> = {};
-        validation.valid.forEach(item => {
-          oddsMap[item.matchId] = `${item.matchId}-${item.type}`;
-        });
-        setSelectedOdds(oddsMap);
-        setIsLoadingBetslip(false);
       }
-    }
+    };
+
+    loadPicksFromUrl();
   }, [apiGames, isLoadingGames]); // Re-run when games or loading state changes
 
   // Enable auto bet calculation

@@ -67,6 +67,8 @@ const App = () => {
                                 <Route path="/tennis" element={<Index sport="tennis" />} />
                                 <Route path="/cricket" element={<Index sport="cricket" />} />
                                 <Route path="/boxing" element={<Index sport="boxing" />} />
+                                {/* Betslip short code route - /nnnnn format */}
+                                <Route path="/:code" element={<Index />} />
                                 {/* Protected routes - redirect to login if not authenticated */}
                                 <Route path="/finance" element={<ProtectedRoute element={<Finance />} />} />
                                 <Route path="/my-bets" element={<ProtectedRoute element={<MyBets />} />} />
