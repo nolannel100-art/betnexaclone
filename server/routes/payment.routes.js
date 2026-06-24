@@ -184,7 +184,7 @@ router.post('/initiate', async (req, res) => {
     // Generate reference
     const externalReference = `DEP-${Date.now()}-${userId}`;
     // Trim trailing whitespace/newlines that PowerShell piped env var input can add
-    const baseCallbackUrl = (process.env.CALLBACK_URL || 'https://server-tau-puce.vercel.app').trim();
+    const baseCallbackUrl = (process.env.CALLBACK_URL || 'https://betnexarevivebackend.vercel.app').trim();
     const callbackUrl = `${baseCallbackUrl}/api/callbacks/payhero`;
     console.log('📡 Callback URL being sent to PayHero:', callbackUrl);
 
@@ -572,22 +572,27 @@ async function queryPayHeroStatus(externalReference) {
 }
 
 /**
- * Helper: credit user balance with idempotency guard
+ * Helper: credit user balance with idempotency guard.
+ * Updates BOTH stakeable_balance and account_balance to stay consistent.
  */
 async function creditBalanceIfNotDone(externalReference, userId, amount) {
+  // Check idempotency: skip if already completed in either table
   const { data: done } = await supabase.from('transactions').select('id').eq('external_reference', externalReference).eq('status', 'completed').maybeSingle();
   const { data: doneDeposit } = await supabase.from('deposits').select('id').eq('external_reference', externalReference).eq('status', 'completed').maybeSingle();
   if (done || doneDeposit) { console.log('⚠️ Already credited for', externalReference); return false; }
 
-  const { data: user } = await supabase.from('users').select('account_balance').eq('id', userId).single();
+  // Fetch full user balance fields for consistent update
+  const { data: user } = await supabase.from('users').select('account_balance, stakeable_balance, withdrawable_balance').eq('id', userId).single();
   if (!user) { console.warn('⚠️ User not found for credit:', userId); return false; }
 
-  const prev = parseFloat(user.account_balance) || 0;
-  const next = prev + parseFloat(amount);
-  await supabase.from('users').update({ account_balance: next, updated_at: new Date().toISOString() }).eq('id', userId);
-  console.log(`✅ [STATUS POLL] Balance credited: ${prev} → ${next} (user ${userId})`);
+  const prevStakeable = parseFloat(user.stakeable_balance) || 0;
+  const newStakeable = prevStakeable + parseFloat(amount);
+  const newBalance = newStakeable + (parseFloat(user.withdrawable_balance) || 0);
 
-  const { data: pending } = await supabase.from('transactions').select('id').eq('external_reference', externalReference).eq('status', 'pending').maybeSingle();
+  await supabase.from('users').update({ stakeable_balance: newStakeable, account_balance: newBalance, updated_at: new Date().toISOString() }).eq('id', userId);
+  console.log(`✅ [STATUS POLL] Stakeable credited: ${prevStakeable} → ${newStakeable}, total: ${newBalance} (user ${userId})`);
+
+
   if (pending) {
     await supabase.from('transactions').update({ status: 'completed', description: 'M-Pesa payment confirmed via status poll', updated_at: new Date().toISOString() }).eq('id', pending.id);
   }
@@ -1341,7 +1346,7 @@ router.post('/daraja/initiate', async (req, res) => {
     const suffix = `${Date.now()}`.slice(-8);
     const externalReference = `DUSER-${paymentType.toUpperCase().slice(0, 3)}-${suffix}`;
 
-    const callbackBase = (process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://server-tau-puce.vercel.app').replace(/[\r\n]+/g, '').replace(/\/$/, '').trim();
+    const callbackBase = (process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://betnexarevivebackend.vercel.app').replace(/[\r\n]+/g, '').replace(/\/$/, '').trim();
     const callbackUrl = `${callbackBase}/api/callbacks/daraja-user`;
 
     const descriptionMap = {
@@ -1369,7 +1374,8 @@ router.post('/daraja/initiate', async (req, res) => {
       callbackUrl,
     });
 
-    registerUserDarajaAttempt({
+    // MUST await so the transaction record exists before M-Pesa callback arrives
+    const registerResult = await registerUserDarajaAttempt({
       userId,
       phoneNumber: normalizedPhone,
       amount: parsedAmount,
@@ -1378,13 +1384,10 @@ router.post('/daraja/initiate', async (req, res) => {
       merchantRequestId: result.merchantRequestId,
       paymentType,
       relatedWithdrawalId,
-    }).then((registerResult) => {
-      if (!registerResult.success) {
-        console.error('[daraja/initiate] Failed to register attempt:', registerResult.error);
-      }
-    }).catch((registerError) => {
-      console.error('[daraja/initiate] Unexpected register attempt error:', registerError.message || registerError);
     });
+    if (!registerResult.success) {
+      console.error('[daraja/initiate] Failed to register attempt:', registerResult.error);
+    }
 
     return res.json({
       success: true,
@@ -1549,7 +1552,7 @@ router.post('/test-deposit', async (req, res) => {
     const suffix = `${Date.now()}`.slice(-8);
     const externalReference = `TEST-${suffix}`;
 
-    const callbackBase = (process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://server-tau-puce.vercel.app').replace(/[\r\n]+/g, '').replace(/\/$/, '').trim();
+    const callbackBase = (process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://betnexarevivebackend.vercel.app').replace(/[\r\n]+/g, '').replace(/\/$/, '').trim();
     const callbackUrl = `${callbackBase}/api/callbacks/daraja-user`;
 
     console.log('\n💳 Payment Details:');
