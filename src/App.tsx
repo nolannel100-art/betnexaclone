@@ -67,8 +67,6 @@ const App = () => {
                                 <Route path="/tennis" element={<Index sport="tennis" />} />
                                 <Route path="/cricket" element={<Index sport="cricket" />} />
                                 <Route path="/boxing" element={<Index sport="boxing" />} />
-                                {/* Betslip short code route - /nnnnn format */}
-                                <Route path="/:code" element={<Index />} />
                                 {/* Protected routes - redirect to login if not authenticated */}
                                 <Route path="/finance" element={<ProtectedRoute element={<Finance />} />} />
                                 <Route path="/my-bets" element={<ProtectedRoute element={<MyBets />} />} />
@@ -77,6 +75,8 @@ const App = () => {
                                 <Route path="/priority-withdrawal" element={<ProtectedRoute element={<PriorityWithdrawal />} />} />
                                 <Route path="/terms" element={<TermsAndConditions />} />
                                 <Route path="/muleiadmin" element={<AdminProtectedRoute element={<AdminPortal />} />} />
+                                {/* Betslip short code route - /nnnnn format (must be before wildcard) */}
+                                <Route path="/:code" element={<Index />} />
                                 <Route path="*" element={<NotFound />} />
                               </Routes>
                             </Suspense>

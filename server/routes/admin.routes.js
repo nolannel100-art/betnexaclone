@@ -847,8 +847,6 @@ router.get('/games/times/batch', async (req, res) => {
       };
     });
 
-    console.log(`✅ [TIMER BATCH] Returned ${results.length} games`);
-
     res.json({
       success: true,
       games: results
