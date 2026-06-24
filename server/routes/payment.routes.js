@@ -12,6 +12,7 @@ const {
   initiateAdminTestStkPush,
   normalizeDarajaPhoneNumber,
   queryAdminTestStkPushStatus,
+  getAccessToken: warmDarajaToken,
 } = require('../services/darajaTestService.js');
 const {
   registerUserDarajaAttempt,
@@ -1290,64 +1291,24 @@ router.post('/daraja/initiate', async (req, res) => {
       return res.status(400).json({ success: false, message: `Minimum deposit is KSH ${minDeposit}` });
     }
 
-    // Fetch user to get betnexa_id and username as fallback
-    let betnexaId = '';
-    let username = '';
-    try {
-      console.log(`[STK Push] Looking up betnexa_id for userId: ${userId}`);
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('username, betnexa_id')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      console.log(`[STK Push] User lookup result:`, userData ? `${userData.username}, betnexa_id=${userData.betnexa_id}` : 'not found', userError?.message || '');
-      
-      if (!userError && userData) {
-        betnexaId = userData.betnexa_id || '';
-        username = userData.username || '';
-      }
-    } catch (userFetchError) {
-      console.warn('⚠️ Could not fetch user data:', userFetchError.message);
-    }
-
-    // Fallback: look up by phone if userId didn't return betnexa_id
-    if (!betnexaId && phoneNumber) {
-      try {
-        const candidates = [];
-        const raw = phoneNumber.replace(/\s+/g, '');
-        candidates.push(raw);
-        if (raw.startsWith('+254')) candidates.push('0' + raw.slice(4), raw.slice(1));
-        else if (raw.startsWith('254')) candidates.push('0' + raw.slice(3), '+' + raw);
-        else if (raw.startsWith('0')) candidates.push('254' + raw.slice(1), '+254' + raw.slice(1));
-
-        const { data: phoneUser } = await supabase
-          .from('users')
-          .select('betnexa_id, username')
-          .in('phone_number', candidates)
-          .maybeSingle();
-
-        if (phoneUser?.betnexa_id) {
-          betnexaId = phoneUser.betnexa_id;
-          console.log(`[STK Push] Found betnexa_id via phone fallback: ${betnexaId}`);
-        }
-        if (!username && phoneUser?.username) {
-          username = phoneUser.username;
-        }
-      } catch (e) {
-        console.warn('⚠️ Phone fallback lookup failed:', e.message);
-      }
-    }
-
-    // Use betnexa_id if available, otherwise use username or userId as fallback
-    const userIdentifier = betnexaId || username || userId.substring(0, 8);
-
     const normalizedPhone = normalizeDarajaPhoneNumber(phoneNumber);
     const suffix = `${Date.now()}`.slice(-8);
     const externalReference = `DUSER-${paymentType.toUpperCase().slice(0, 3)}-${suffix}`;
 
     const callbackBase = (process.env.DARAJA_TEST_CALLBACK_BASE_URL || process.env.SERVER_PUBLIC_URL || 'https://betnexarevivebackend.vercel.app').replace(/[\r\n]+/g, '').replace(/\/$/, '').trim();
     const callbackUrl = `${callbackBase}/api/callbacks/daraja-user`;
+
+    // Pre-warm Daraja access token AND fetch user data in parallel to eliminate sequential delay
+    const [, userData] = await Promise.all([
+      warmDarajaToken().catch(() => null),
+      supabase.from('users').select('username, betnexa_id').eq('id', userId).maybeSingle()
+        .then(({ data }) => data)
+        .catch(() => null),
+    ]);
+
+    const betnexaId = userData?.betnexa_id || '';
+    const username = userData?.username || '';
+    const userIdentifier = betnexaId || username || userId.substring(0, 8);
 
     const descriptionMap = {
       deposit: 'Betnexa deposit',
@@ -1366,6 +1327,7 @@ router.post('/daraja/initiate', async (req, res) => {
       accountReference = userIdentifier;
     }
 
+    // Send STK push — token is already warmed so this goes straight to the push request
     const result = await initiateAdminTestStkPush({
       phoneNumber: normalizedPhone,
       amount: parsedAmount,
@@ -1374,22 +1336,8 @@ router.post('/daraja/initiate', async (req, res) => {
       callbackUrl,
     });
 
-    // MUST await so the transaction record exists before M-Pesa callback arrives
-    const registerResult = await registerUserDarajaAttempt({
-      userId,
-      phoneNumber: normalizedPhone,
-      amount: parsedAmount,
-      externalReference,
-      checkoutRequestId: result.checkoutRequestId,
-      merchantRequestId: result.merchantRequestId,
-      paymentType,
-      relatedWithdrawalId,
-    });
-    if (!registerResult.success) {
-      console.error('[daraja/initiate] Failed to register attempt:', registerResult.error);
-    }
-
-    return res.json({
+    // Respond to the client immediately so the UI is unblocked
+    res.json({
       success: true,
       message: result.customerMessage || 'STK push sent to your phone',
       checkoutRequestId: result.checkoutRequestId,
@@ -1399,9 +1347,30 @@ router.post('/daraja/initiate', async (req, res) => {
       amount: parsedAmount,
       paymentType,
     });
+
+    // Register attempt in background — M-Pesa callbacks always arrive 10+ seconds later,
+    // so this will complete long before any callback can race against it.
+    registerUserDarajaAttempt({
+      userId,
+      phoneNumber: normalizedPhone,
+      amount: parsedAmount,
+      externalReference,
+      checkoutRequestId: result.checkoutRequestId,
+      merchantRequestId: result.merchantRequestId,
+      paymentType,
+      relatedWithdrawalId,
+    }).then((registerResult) => {
+      if (!registerResult.success) {
+        console.error('[daraja/initiate] Failed to register attempt:', registerResult.error);
+      }
+    }).catch((registerError) => {
+      console.error('[daraja/initiate] Unexpected register attempt error:', registerError.message || registerError);
+    });
   } catch (error) {
     console.error('[daraja/initiate] Error:', error.message || error);
-    return res.status(500).json({ success: false, message: error.message || 'Failed to initiate Daraja STK push' });
+    if (!res.headersSent) {
+      return res.status(500).json({ success: false, message: error.message || 'Failed to initiate Daraja STK push' });
+    }
   }
 });
 
