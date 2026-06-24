@@ -6,7 +6,7 @@
  */
 
 const supabase = require('./database');
-const fetch = require('node-fetch');
+// fetch is available natively in Node.js 18+
 
 class SupabaseHealthMonitor {
   constructor() {
