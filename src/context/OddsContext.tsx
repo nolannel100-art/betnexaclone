@@ -194,68 +194,76 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
       const now = Date.now();
 
-      // Fetch timer for each live game in parallel
-      const timerPromises = liveGames.map(async (game) => {
-        // Check if this game just kicked off (within last 2 seconds) - use local calculation
+      // Separate games into local-calc and backend-fetch groups
+      const localGames = [];
+      const backendGames = [];
+
+      for (const game of liveGames) {
         const kickoffTime = kickoffTimesRef.current[game.id];
         const timeSinceKickoff = kickoffTime ? now - kickoffTime : -1;
         
         if (kickoffTime && timeSinceKickoff < 2000) {
-          // Game just kicked off - use local time to ensure clean 0:00 start
+          // Game just kicked off - use local time
           const elapsedMs = timeSinceKickoff;
           const totalSeconds = Math.floor(elapsedMs / 1000);
-          return {
+          localGames.push({
             gameId: game.id,
             minute: Math.floor(totalSeconds / 60),
             seconds: totalSeconds % 60,
+            isHalftime: false,
+            gamePaused: false,
             source: 'local'
-          };
+          });
+        } else {
+          // After 2 seconds, add to backend fetch list
+          backendGames.push(game);
         }
+      }
 
-        // After 2 seconds, fetch from backend to stay in sync
+      // ⚡ OPTIMIZATION: Use batch endpoint for multiple games (replaces individual requests)
+      // This reduces: 20 games = 20 requests → 1 request (95% reduction)
+      let backendResults = [];
+      if (backendGames.length > 0) {
         try {
-          const response = await fetch(`${apiUrl}/api/admin/games/${game.id}/time`, {
-            signal: AbortSignal.timeout(2000), // Shorter timeout for timer
+          const gameIds = backendGames.map(g => g.id).join(',');
+          const response = await fetch(`${apiUrl}/api/admin/games/times/batch?ids=${encodeURIComponent(gameIds)}`, {
+            signal: AbortSignal.timeout(3000),
           });
 
           if (response.ok) {
             const data = await response.json();
-            if (data.success) {
-              return {
-                gameId: game.id,
-                minute: data.minute ?? 0,
-                seconds: data.seconds ?? 0,
-                isHalftime: data.isHalftime ?? false,
-                gamePaused: data.gamePaused ?? false,
-                source: 'server'
-              };
+            if (data.success && data.games) {
+              backendResults = data.games.map((g: any) => ({
+                gameId: g.gameId,
+                minute: g.minute ?? 0,
+                seconds: g.seconds ?? 0,
+                isHalftime: g.isHalftime ?? false,
+                gamePaused: g.gamePaused ?? false,
+                source: 'batch'
+              }));
             }
           }
         } catch (error) {
-          // Silently fail for individual games
+          console.error('Timer batch fetch failed:', error);
         }
-        return null;
-      });
+      }
 
-      // Wait for all timer fetches to complete
-      const results = await Promise.all(timerPromises);
+      // Combine local and backend results
+      const allResults = [...localGames, ...backendResults];
 
-      // Batch all updates into a single setGames call to prevent duplicate renders/intervals
-      const validResults = results.filter((r): r is { gameId: string; minute: number; seconds: number; isHalftime: boolean; gamePaused: boolean; source: string } => r !== null);
-      
-      if (validResults.length > 0) {
+      // Batch all updates into a single setGames call
+      if (allResults.length > 0) {
         setGames(prev => {
-          // Check if any values actually changed before creating new array
           let hasChanges = false;
           const updated = prev.map(g => {
-            const timerUpdate = validResults.find(r => r.gameId === g.id);
+            const timerUpdate = allResults.find(r => r.gameId === g.id);
             if (timerUpdate && (g.minute !== timerUpdate.minute || g.seconds !== timerUpdate.seconds || g.isHalftime !== timerUpdate.isHalftime || g.gamePaused !== timerUpdate.gamePaused)) {
               hasChanges = true;
               return { ...g, minute: timerUpdate.minute, seconds: timerUpdate.seconds, isHalftime: timerUpdate.isHalftime, gamePaused: timerUpdate.gamePaused };
             }
             return g;
           });
-          if (!hasChanges) return prev; // No changes, skip re-render
+          if (!hasChanges) return prev;
           gamesRef.current = updated;
           return updated;
         });

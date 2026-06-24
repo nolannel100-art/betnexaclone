@@ -171,7 +171,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const interval = setInterval(checkBanStatus, 30000);
+    // Ban check increased from 30s to 2 minutes (reduces from 2 req/min to 0.5 req/min)
+    // User ban status already checked on login, re-check every 2 minutes is sufficient
+    // This change: -1.5 requests/min per user
+    const interval = setInterval(checkBanStatus, 120000);
     return () => clearInterval(interval);
   }, [user?.phone, isLoggedIn]);
 

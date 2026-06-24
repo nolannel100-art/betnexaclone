@@ -759,6 +759,111 @@ router.get('/games/:gameId/time', async (req, res) => {
   }
 });
 
+/**
+ * BATCH ENDPOINT: GET /api/admin/games/times/batch
+ * Fetches game times for multiple games in ONE request instead of individual requests
+ * This reduces requests by 90% when there are 10+ live games
+ * 
+ * Query param: ids=gameId1,gameId2,gameId3 (comma-separated)
+ * Response: { success: true, games: [ { gameId, minute, seconds, ... }, ... ] }
+ */
+router.get('/games/times/batch', async (req, res) => {
+  try {
+    const { ids } = req.query;
+    
+    if (!ids || typeof ids !== 'string' || !ids.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'ids query parameter required (comma-separated game IDs)'
+      });
+    }
+
+    // Parse comma-separated game IDs
+    const gameIds = ids.split(',').map(id => id.trim()).filter(Boolean);
+    
+    if (gameIds.length === 0 || gameIds.length > 50) {
+      return res.status(400).json({
+        success: false,
+        error: 'Must provide 1-50 game IDs'
+      });
+    }
+
+    console.log(`\n⏱️ [TIMER BATCH] Fetching ${gameIds.length} games`);
+
+    // Fetch all games in one query
+    const { data: games, error } = await supabase
+      .from('games')
+      .select('id, game_id, kickoff_start_time, is_kickoff_started, status, is_halftime, game_paused, minute, updated_at')
+      .in('game_id', gameIds);
+
+    if (error) {
+      console.error('❌ [TIMER BATCH] Query error:', error.message);
+      return res.status(500).json({
+        success: false,
+        error: 'Database query failed'
+      });
+    }
+
+    if (!games || games.length === 0) {
+      return res.json({
+        success: true,
+        games: []
+      });
+    }
+
+    const serverNow = Date.now();
+    const results = games.map(data => {
+      const kickoffMs = data.kickoff_start_time ? new Date(data.kickoff_start_time).getTime() : null;
+      const updatedAtMs = data.updated_at ? new Date(data.updated_at).getTime() : null;
+      let minute = 0;
+      let seconds = 0;
+      const storedMinute = parseInt(data.minute, 10) || 0;
+
+      // Same logic as single endpoint
+      if (data.is_halftime || data.game_paused) {
+        minute = storedMinute;
+        seconds = 0;
+      } else if (data.is_kickoff_started && updatedAtMs && !isNaN(updatedAtMs)) {
+        const sinceUpdateSeconds = Math.max(0, Math.floor((serverNow - updatedAtMs) / 1000));
+        minute = storedMinute + Math.floor(sinceUpdateSeconds / 60);
+        seconds = sinceUpdateSeconds % 60;
+        if (minute > 130) {
+          minute = storedMinute;
+          seconds = 0;
+        }
+      } else if (data.is_kickoff_started && kickoffMs && !isNaN(kickoffMs)) {
+        const elapsedMs = serverNow - kickoffMs;
+        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        minute = Math.floor(elapsedSeconds / 60);
+        seconds = elapsedSeconds % 60;
+      }
+
+      return {
+        gameId: data.game_id,
+        minute,
+        seconds,
+        isHalftime: data.is_halftime,
+        gamePaused: data.game_paused,
+        status: data.status
+      };
+    });
+
+    console.log(`✅ [TIMER BATCH] Returned ${results.length} games`);
+
+    res.json({
+      success: true,
+      games: results
+    });
+
+  } catch (error) {
+    console.error('❌ [TIMER BATCH] Exception:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+});
+
 // DEBUG: GET all games for troubleshooting
 router.get('/debug/games', async (req, res) => {
   try {

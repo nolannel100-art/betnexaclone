@@ -32,8 +32,11 @@ export function BalanceSyncProvider({ children }: { children: React.ReactNode })
       updateUser({ withdrawalActivated: activated, withdrawalActivationDate: activationDate });
     });
 
-    // Start auto-sync every 5 seconds
-    balanceSyncService.startAutoSync(user.id, 5000);
+    // DISABLED: Balance auto-sync removed (was fetching every 5 seconds)
+    // Balance now syncs event-based: on bet placement, deposit, withdrawal, or bet settlement
+    // This change: -12 requests/min per user (removes 100% of scheduled balance syncs)
+    // Note: Balance updates still happen in real-time on transactions via listeners above
+    // balanceSyncService.startAutoSync(user.id, 5000);
 
     return () => {
       unsubscribe();

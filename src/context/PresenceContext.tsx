@@ -99,10 +99,10 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 
     sendHeartbeat();
 
-    // Send heartbeat every 5 s — well within the 30 s server active window.
-    // Using a longer interval avoids the tight timing that caused users to
-    // blink in/out of the online list due to network jitter.
-    heartbeatInterval = setInterval(sendHeartbeat, 5000);
+    // Send heartbeat every 15 s — reduces requests by 67% while staying within 30 s server window.
+    // Users may appear offline ~10s after disconnect, but significantly reduces API load.
+    // This change: -8 requests/min per user (was 12, now 4)
+    heartbeatInterval = setInterval(sendHeartbeat, 15000);
   }, [apiUrl]);
 
   // Stop presence tracking (called on logout)
@@ -178,12 +178,12 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
       clearInterval(activeUsersInterval);
     }
 
-    // Poll every 3 s — frequent enough for smooth updates, infrequent
-    // enough to stop causing per-second list replacements that made users
-    // appear to blink on the admin dashboard.
+    // Poll every 10 s — reduced from 3s to save 70% of these requests.
+    // Active user count slightly delayed but real-time presence still works.
+    // This change: -12 requests/min per user (was 20, now 6)
     activeUsersInterval = setInterval(() => {
       fetchActiveUsers();
-    }, 3000);
+    }, 10000);
 
     return () => {
       if (activeUsersInterval) {
