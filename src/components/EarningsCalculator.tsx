@@ -63,7 +63,7 @@ export function EarningsCalculator() {
   const fetchEarnings = async (start: string, end: string) => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
       const summaryResponse = await fetch(
         `${apiUrl}/api/admin/earnings?startDate=${start}&endDate=${end}&phone=${adminPhone}`,
         { headers: { 'Content-Type': 'application/json' }, method: 'GET' }
@@ -83,7 +83,7 @@ export function EarningsCalculator() {
 
     // Fetch daily breakdown (optional)
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
       const dailyResponse = await fetch(
         `${apiUrl}/api/admin/earnings/daily?startDate=${start}&endDate=${end}&phone=${adminPhone}`,
         { headers: { 'Content-Type': 'application/json' }, method: 'GET' }
@@ -107,7 +107,7 @@ export function EarningsCalculator() {
     setDayLoading(true);
     setDayTransactions([]);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
       const res = await fetch(
         `${apiUrl}/api/admin/earnings/day-details?date=${date}&phone=${adminPhone}`,
         { headers: { 'Content-Type': 'application/json' }, method: 'GET' }

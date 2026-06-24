@@ -43,7 +43,7 @@ export const generateShareableLink = async (items: BetSlipItem[], baseUrl: strin
   if (!items || items.length === 0) return "";
   
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
     
     const response = await fetch(`${apiUrl}/api/bets/share-betslip`, {
       method: 'POST',
@@ -95,7 +95,7 @@ export const getPicksFromUrl = async (): Promise<BetSlipItem[]> => {
     if (!code) return [];
 
     // Fetch betslip from backend
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
     const response = await fetch(`${apiUrl}/api/bets/betslip/${code}`);
     const data = await response.json();
 

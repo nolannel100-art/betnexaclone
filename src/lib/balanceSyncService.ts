@@ -87,7 +87,7 @@ class BalanceSyncService {
    */
   async fetchBalance(userId: string): Promise<number | null> {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
       const response = await fetch(
         `${apiUrl}/api/payments/user-balance/${userId}`
       );

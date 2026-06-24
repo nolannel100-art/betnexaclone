@@ -106,7 +106,7 @@ export function MatchEventEditor({ gameId, gameName, kickoffTime, onClose, admin
   }, [gameId, adminPhone]);
 
   // Admin phone is passed as prop from AdminPortal
-  const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
 
   const loadEvents = async () => {
     try {

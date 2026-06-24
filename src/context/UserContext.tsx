@@ -146,7 +146,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const checkBanStatus = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
         const res = await fetch(`${apiUrl}/api/auth/ban-check?phone=${encodeURIComponent(user.phone)}`);
         const data = await res.json();
         if (data.banned) {
@@ -247,7 +247,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const loginWithSupabase = async (phone: string, password: string): Promise<UserProfile | null> => {
     try {
       console.log(`\n🔐 [loginWithSupabase] Attempting login for: ${phone}`);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app'}/api/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app'}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +285,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Signup with backend API
   const signupWithSupabase = async (userData: any): Promise<UserProfile | null> => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app'}/api/auth/signup`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app'}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -343,7 +343,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     
     try {
       console.log(`🔄 Starting refresh for phone: ${user.phone}`);
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
       const profileUrl = `${apiUrl}/api/auth/profile/${encodeURIComponent(user.phone)}`;
       console.log(`   URL: ${profileUrl}`);
 

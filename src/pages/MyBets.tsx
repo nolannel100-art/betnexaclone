@@ -128,7 +128,7 @@ export default function MyBets() {
 
     const loadBetsFromServer = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
         const response = await fetch(`${apiUrl}/api/bets/user?phoneNumber=${encodeURIComponent(user.phone)}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
@@ -244,7 +244,7 @@ export default function MyBets() {
 
     setIsUpdatingOutcome(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexaclone.vercel.app';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://betnexarevivebackend.vercel.app';
       const response = await fetch(`${apiUrl}/api/admin/bets/${betId}/selections/${selectionId}/outcome`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
