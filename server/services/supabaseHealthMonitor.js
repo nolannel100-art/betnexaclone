@@ -78,7 +78,8 @@ class SupabaseHealthMonitor {
     this.metrics.totalHealthChecks++;
     const checkStart = Date.now();
 
-    console.log(`\n📊 [${new Date().toISOString()}] Starting comprehensive health check...`);
+    // Removed: console.log for every 30-second check (5.9M logs/month)
+    // Now only logs on status changes (healthy → degraded, etc.)
 
     // Run all health checks in parallel
     const checks = await Promise.allSettled([
@@ -100,16 +101,21 @@ class SupabaseHealthMonitor {
 
     // Update overall metrics
     const checkDuration = Date.now() - checkStart;
+    const previousHealth = this.metrics.overallHealth;
+    
     if (healthyServices >= 4) { // At least 4 out of 6 services healthy
       this.metrics.successfulChecks++;
       this.metrics.overallHealth = 'healthy';
       this.metrics.systemHealthy = true;
-      console.log(`✅ System HEALTHY (${healthyServices}/6 services operational)`);
     } else {
       this.metrics.failedChecks++;
       this.metrics.overallHealth = healthyServices >= 2 ? 'degraded' : 'unhealthy';
       this.metrics.systemHealthy = healthyServices >= 4;
-      console.log(`⚠️  System ${this.metrics.overallHealth.toUpperCase()} (${healthyServices}/6 services operational)`);
+    }
+
+    // Only log when status CHANGES to reduce observability costs
+    if (previousHealth !== this.metrics.overallHealth) {
+      console.log(`⚠️  Health Status Changed: ${previousHealth || 'initial'} → ${this.metrics.overallHealth} (${healthyServices}/6 services)`);
     }
 
     this.metrics.lastFullCheck = new Date();
@@ -147,7 +153,7 @@ class SupabaseHealthMonitor {
         this.services[service].failureCount++;
         this.updateCircuitBreaker(service, false);
         this.addAlert('error', `Database connection failed: ${error.message}`);
-        console.log(`  ❌ Database: FAILED (${responseTime}ms) - ${error.message}`);
+        // Removed per-service log (high-frequency)
         return false;
       }
 
@@ -158,18 +164,18 @@ class SupabaseHealthMonitor {
 
       if (responseTime > this.thresholds.responseTimeCritical) {
         this.addAlert('warning', `Database slow: ${responseTime}ms`);
-        console.log(`  ⚠️  Database: SLOW (${responseTime}ms)`);
+        // Removed per-service log (high-frequency)
         return true;
       }
 
-      console.log(`  ✅ Database: OK (${responseTime}ms)`);
+      // Removed: console.log for OK status (high-frequency)
       return true;
 
     } catch (err) {
       this.services[service].failureCount++;
       this.updateCircuitBreaker(service, false);
       this.addAlert('error', `Database exception: ${err.message}`);
-      console.log(`  ❌ Database: ERROR (${err.message})`);
+      // Removed per-service log (high-frequency)
       return false;
     }
   }
@@ -211,7 +217,7 @@ class SupabaseHealthMonitor {
         this.services[service].failureCount++;
         this.updateCircuitBreaker(service, false);
         this.addAlert('error', `PostREST API failed: HTTP ${response.status}`);
-        console.log(`  ❌ PostREST: FAILED (HTTP ${response.status})`);
+        // Removed per-service log (high-frequency)
         return false;
       }
 
@@ -219,14 +225,14 @@ class SupabaseHealthMonitor {
       this.services[service].lastCheck = new Date();
       this.services[service].failureCount = 0;
       this.updateCircuitBreaker(service, true);
-      console.log(`  ✅ PostREST: OK (${responseTime}ms)`);
+      // Removed per-service log (high-frequency)
       return true;
 
     } catch (err) {
       this.services[service].failureCount++;
       this.updateCircuitBreaker(service, false);
       this.addAlert('error', `PostREST exception: ${err.message}`);
-      console.log(`  ❌ PostREST: ERROR (${err.message})`);
+      // Removed per-service log (high-frequency)
       return false;
     }
   }
@@ -267,7 +273,7 @@ class SupabaseHealthMonitor {
         this.services[service].failureCount++;
         this.updateCircuitBreaker(service, false);
         this.addAlert('error', `Auth service failed: HTTP ${response.status}`);
-        console.log(`  ❌ Auth: FAILED (HTTP ${response.status})`);
+        // Removed per-service log (high-frequency)
         return false;
       }
 
@@ -275,14 +281,14 @@ class SupabaseHealthMonitor {
       this.services[service].lastCheck = new Date();
       this.services[service].failureCount = 0;
       this.updateCircuitBreaker(service, true);
-      console.log(`  ✅ Auth: OK (${responseTime}ms)`);
+      // Removed per-service log (high-frequency)
       return true;
 
     } catch (err) {
       this.services[service].failureCount++;
       this.updateCircuitBreaker(service, false);
       this.addAlert('error', `Auth exception: ${err.message}`);
-      console.log(`  ❌ Auth: ERROR (${err.message})`);
+      // Removed per-service log (high-frequency)
       return false;
     }
   }
@@ -323,7 +329,7 @@ class SupabaseHealthMonitor {
         this.services[service].failureCount++;
         this.updateCircuitBreaker(service, false);
         this.addAlert('error', `Storage service failed: HTTP ${response.status}`);
-        console.log(`  ❌ Storage: FAILED (HTTP ${response.status})`);
+        // Removed per-service log (high-frequency)
         return false;
       }
 
@@ -331,14 +337,14 @@ class SupabaseHealthMonitor {
       this.services[service].lastCheck = new Date();
       this.services[service].failureCount = 0;
       this.updateCircuitBreaker(service, true);
-      console.log(`  ✅ Storage: OK (${responseTime}ms)`);
+      // Removed per-service log (high-frequency)
       return true;
 
     } catch (err) {
       this.services[service].failureCount++;
       this.updateCircuitBreaker(service, false);
       this.addAlert('error', `Storage exception: ${err.message}`);
-      console.log(`  ❌ Storage: ERROR (${err.message})`);
+      // Removed per-service log (high-frequency)
       return false;
     }
   }
@@ -387,14 +393,14 @@ class SupabaseHealthMonitor {
       this.services[service].lastCheck = new Date();
       this.services[service].failureCount = 0;
       this.updateCircuitBreaker(service, true);
-      console.log(`  ✅ Realtime: OK (${responseTime}ms)`);
+      // Removed per-service log (high-frequency)
       return true;
 
     } catch (err) {
       this.services[service].failureCount++;
       this.updateCircuitBreaker(service, false);
       this.addAlert('warning', `Realtime exception: ${err.message}`);
-      console.log(`  ⚠️  Realtime: ERROR (${err.message})`);
+      // Removed per-service log (high-frequency)
       return false;
     }
   }

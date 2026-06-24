@@ -323,8 +323,7 @@ router.post('/logout', async (req, res) => {
  */
 router.get('/active', async (req, res) => {
   try {
-    console.log('\n👥 [GET /api/presence/active] Fetching active users');
-
+    // Removed verbose logging to reduce observability costs (was 259M logs/month)
     // Keep online list very fresh for near real-time dashboard updates.
     const activeWindowStart = new Date(Date.now() - ACTIVE_WINDOW_MS).toISOString();
 
@@ -360,7 +359,7 @@ router.get('/active', async (req, res) => {
     }
 
     const uniqueUserCount = new Set((activeSessions || []).map((s) => s.user_id)).size;
-    console.log(`✅ Retrieved ${activeSessions?.length || 0} active sessions (${uniqueUserCount} unique users)`);
+    // Removed: console.log with results (high-frequency)
 
     res.json({
       success: true,

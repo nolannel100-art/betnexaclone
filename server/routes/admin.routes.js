@@ -647,7 +647,7 @@ function generateDefaultMarkets(gameUUID, homeOdds, drawOdds, awayOdds) {
 router.get('/games/:gameId/time', async (req, res) => {
   try {
     const { gameId } = req.params;
-    console.log(`\n⏱️ [TIMER] Request for gameId: ${gameId}`);
+    // Removed verbose logging to reduce observability costs
 
     if (!gameId) {
       return res.status(400).json({
@@ -711,7 +711,7 @@ router.get('/games/:gameId/time', async (req, res) => {
     if (data.is_halftime || data.game_paused) {
       minute = storedMinute;
       seconds = 0;
-      console.log(`⏸️  [TIMER] ${data.game_id}: Paused at ${String(minute).padStart(2, '0')}:00`);
+      // Removed logging: Paused state (high-frequency)
     } else if (data.is_kickoff_started && updatedAtMs && !isNaN(updatedAtMs)) {
       // Use API-reported minute as anchor and only interpolate seconds from last sync.
       // This prevents long-halftime drift (e.g. 108' while real minute is ~90').
@@ -724,8 +724,7 @@ router.get('/games/:gameId/time', async (req, res) => {
         minute = storedMinute;
         seconds = 0;
       }
-
-      console.log(`🎯 [TIMER] ${data.game_id}: ${String(minute).padStart(2, '0')}:${String(seconds).padStart(2, '0')} (anchor: ${storedMinute}', +${sinceUpdateSeconds}s)`);
+      // Removed logging: timer calculation (high-frequency)
     } else if (data.is_kickoff_started && kickoffMs && !isNaN(kickoffMs)) {
       // Fallback for legacy rows missing updated_at
       const elapsedMs = serverNow - kickoffMs;
@@ -733,7 +732,7 @@ router.get('/games/:gameId/time', async (req, res) => {
       minute = Math.floor(elapsedSeconds / 60);
       seconds = elapsedSeconds % 60;
     } else {
-      console.log(`⏹️  [TIMER] ${data.game_id}: Game not started yet (is_kickoff_started: ${data.is_kickoff_started})`);
+      // Removed logging: Game not started state (high-frequency)
     }
 
     // Send response
@@ -788,7 +787,7 @@ router.get('/games/times/batch', async (req, res) => {
       });
     }
 
-    console.log(`\n⏱️ [TIMER BATCH] Fetching ${gameIds.length} games`);
+    // Removed logging: batch fetch count (high-frequency)
 
     // Fetch all games in one query
     const { data: games, error } = await supabase
